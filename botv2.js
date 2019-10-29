@@ -56,16 +56,17 @@ var bot = {
             
             this.rateController = document.createElement('input');
             this.rateController.type = 'range';
-            this.rateController.min = 1;
+            this.rateController.min = 0;
             this.rateController.max = 1000;
             this.rateController.value = 1000;
-            this.rateController.step = 10;
+            this.rateController.step = 1;
             this.rateController.addEventListener('change', e => {
                 let rate = e.target.value;
                 bot.changeRate(rate);
             });
             this.rateController.setAttribute('style',`
                 cursor: pointer;
+                width: 100%;
             `);
 
             this.rate.appendChild(this.rateText);
@@ -86,17 +87,14 @@ var bot = {
             });
 
             this.listForm = document.createElement('form');
-            this.addToListText = document.createTextNode('Add to message queue');
             this.addToList = document.createElement('input');
             this.addToList.placeholder = 'Add to message queue';
             this.addToList.setAttribute('style',`
                 width: 80%;
-                margin: 5px 0;
+                margin: 10px 0 5px 0;
             `);
             this.list = document.createElement('div');
             this.list.addEventListener('click', e => {
-                console.log(e.target.textContent);
-                
                 bot.text.removeMessage(e.target.textContent);
             });
 
@@ -114,7 +112,6 @@ var bot = {
             this.panel.appendChild(this.btn);
             this.panel.appendChild(this.rate);
             this.panel.appendChild(this.btnAutoNext);
-            this.panel.appendChild(this.addToListText);
             this.panel.appendChild(this.listForm);
             
             body.insertBefore(this.panel, body.firstChild);
@@ -172,9 +169,9 @@ var bot = {
                 msgNode.appendChild(msg);
                 msgNode.setAttribute('style',`
                     padding: 2px;
-                    background: #fff;
+                    background: #fff9;
                     color: black;
-                    border-top: 1px solid #aaa;
+                    border-top: 1px solid #777;
                     max-width: 100%;
                     overflow: auto;
                     cursor: pointer;
