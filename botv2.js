@@ -13,6 +13,7 @@ var bot = {
         rateText: '',
         listForm: '',
         addToList: '',
+        isHidden: false,
 
         init(){
             const body = document.querySelector('body');
@@ -20,15 +21,33 @@ var bot = {
             const oldBotPanel = document.querySelector('#botPanel');
             oldBotPanel ? (oldBotPanel.remove()) : null;
  
+            this.hideBtn = document.createElement('span');
+            this.hideBtn.appendChild(document.createTextNode('HIDE'))
+            this.hideBtn.setAttribute('style',`
+                padding: 5px;
+                background: red;
+                color: white;
+                border: 2px solid white;
+                cursor: pointer;
+                margin: 0 0 10px;
+            `);
+            this.hideBtn.addEventListener('click', e => {
+                if(this.isHidden){
+                    this.hideBtn.style.setProperty('background','red');
+                    this.all.style.setProperty('display', 'flex');
+                } else {
+                    this.hideBtn.style.setProperty('background','green')
+                    this.all.style.setProperty('display', 'none');
+                }
+                this.isHidden = !this.isHidden;
+            });
+
             this.panel = document.createElement('div');
             this.panel.id = 'botPanel';
             this.panel.setAttribute('style',`
                 padding: 10px;
                 z-index: 1000;
                 position: absolute;
-                display: flex;
-                flex-flow: column;
-                justify-content: center;
                 width: 300px;
             `);
 
@@ -45,6 +64,20 @@ var bot = {
             this.btn.addEventListener('click', e => {
                 bot.toggle();
             });
+
+            this.loopDiv = document.createElement('div');
+            this.loopDiv.appendChild(document.createTextNode('Loop '))
+            this.loopBox = document.createElement('input');
+            this.loopBox.type = 'checkbox';
+            this.loopBox.checked = true;
+            this.loopBox.addEventListener('change', e => {
+                if(e.target.checked){
+                    bot.text.setLoop(true);
+                } else {
+                    bot.text.setLoop(false);
+                }
+            });
+            this.loopDiv.appendChild(this.loopBox);
 
             this.rate = document.createElement('div');
             this.rate.setAttribute('style',`
@@ -87,17 +120,31 @@ var bot = {
             });
 
             this.listForm = document.createElement('form');
+            this.upperDiv = document.createElement('div');
+
             this.addToList = document.createElement('input');
             this.addToList.placeholder = 'Add to message queue';
             this.addToList.setAttribute('style',`
-                width: 80%;
-                margin: 10px 0 5px 0;
+                width: 70%;
             `);
-            this.list = document.createElement('div');
-            this.list.addEventListener('click', e => {
-                bot.text.removeMessage(e.target.textContent);
+
+            this.removeQueueBtn = document.createElement('div');
+            this.removeQueueBtn.textContent = 'X';
+            this.removeQueueBtn.setAttribute('style',`
+                padding: 2px 6px;
+                background: red;
+                color: white;
+                border: 2px solid white;
+                cursor: pointer;
+            `);
+            this.removeQueueBtn.addEventListener('click', e => {
+                bot.text.removeQueue();
             });
 
+            this.list = document.createElement('div');
+            this.list.addEventListener('click', e => {
+                bot.text.removeMessage(e.target.dataset.id);
+            });
             this.listForm.addEventListener('submit', e => {
                 e.preventDefault();
                 const msg = this.addToList.value;
@@ -106,23 +153,68 @@ var bot = {
                 this.addToList.value = '';
             });
 
-            this.listForm.appendChild(this.addToList);
+            this.upperDiv.setAttribute('style',`
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin: 10px 0 5px;
+            `);
+
+            this.upperDiv.appendChild(this.addToList);
+            this.upperDiv.appendChild(this.removeQueueBtn);
+
+            this.listForm.appendChild(this.upperDiv);
             this.listForm.appendChild(this.list);
 
-            this.panel.appendChild(this.btn);
-            this.panel.appendChild(this.rate);
-            this.panel.appendChild(this.btnAutoNext);
-            this.panel.appendChild(this.listForm);
+            this.all = document.createElement('div');
+            this.all.setAttribute('style',`
+                display: flex;
+                flex-flow: column;
+                justify-content: center;
+                margin: 10px 0 0;
+            `);
+
+            this.all.appendChild(this.btn);
+            this.all.appendChild(this.loopDiv);
+            this.all.appendChild(this.rate);
+            this.all.appendChild(this.btnAutoNext);
+            this.all.appendChild(this.listForm);
+
+            this.panel.appendChild(this.hideBtn);
+            this.panel.appendChild(this.all);
             
             body.insertBefore(this.panel, body.firstChild);
+
+            this.stylize();
         },
+
+        stylize(){
+            var css = `
+                #botPanel {
+
+                }
+                
+                
+                
+            `;
+
+            var style = document.createElement('style');
+
+            if (style.styleSheet) {
+                style.styleSheet.cssText = css;
+            } else {
+                style.appendChild(document.createTextNode(css));
+            }
+
+            document.getElementsByTagName('head')[0].appendChild(style);
+        }
     },
 
     text: {
         textArr: ['🎈'],
         input: '',
         counter: 1,
-        finishWhenRunOut: true,
+        loop: true,
 
         insert(){
             this.input = bot.inp;
@@ -136,15 +228,20 @@ var bot = {
                     this.input.value = this.textArr[this.counter-1];
                     this.counter++;
 
-                } else if(this.finishWhenRunOut){
+                } else if(!this.loop){
                     this.counter = 1;
                     bot.stop()
 
                 } else {
+                    this.input.value = this.textArr[0];
                     this.counter = 1;
-                    this.input.value += this.textArr[this.textArr.length];
+                    // this.input.value += this.textArr[this.textArr.length];
                 }
             }
+        },
+
+        setLoop(state){
+            this.loop = state;
         },
 
         addMessage(msg){
@@ -154,18 +251,22 @@ var bot = {
             }
         },
 
-        removeMessage(msg){
-            const newTextArr = this.textArr.filter(item => item != msg);
-            this.textArr = newTextArr;
+        removeMessage(id){
+            this.textArr.splice(id, 1);
+            this.updateList();
+        },
 
+        removeQueue(){
+            this.textArr = ['🎈'];
             this.updateList();
         },
 
         updateList(){
             bot.cp.list.innerHTML = '';
-            this.textArr.map(item => {
+            this.textArr.map((item, id) => {
                 const msg = document.createTextNode(item);
                 const msgNode = document.createElement('div');
+                msgNode.dataset.id = id;
                 msgNode.appendChild(msg);
                 msgNode.setAttribute('style',`
                     padding: 2px;
