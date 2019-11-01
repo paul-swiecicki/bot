@@ -117,6 +117,24 @@ var bot = {
                 bot.toggleAutoNext();
             });
 
+            this.templates = document.createElement('div');
+            this.templates.classList.add('bot--templates');
+            this.select = document.createElement('select');
+
+            const optionsArr = ['NONE','increment', 'waves'];
+            for(let i=0; i<optionsArr.length; i++){
+                const opt = document.createElement('option');
+
+                opt.appendChild(document.createTextNode(optionsArr[i]));
+                opt.value = optionsArr[i];
+                this.select.appendChild(opt);
+            }
+            this.templates.appendChild(document.createTextNode('Template '));
+            this.templates.appendChild(this.select);
+            this.select.addEventListener('change', e => {
+                bot.text.setTemplate(e.target.value);
+            });
+
             this.listForm = document.createElement('form');
             this.upperDiv = document.createElement('div');
 
@@ -161,6 +179,7 @@ var bot = {
 
             this.all.appendChild(this.rate);
             this.all.appendChild(this.btnAutoNext);
+            this.all.appendChild(this.templates);
             this.all.appendChild(this.listForm);
 
             this.panel.appendChild(this.hideBtn);
@@ -173,6 +192,10 @@ var bot = {
 
         stylize(){
             const css = `
+                #botPanel {
+                    color: white;
+                }
+
                 .bot--queue-item {
                     padding: 2px;
                     background: #fff9;
@@ -202,6 +225,10 @@ var bot = {
                 #bot--remove-queue {
                     padding: 2px 6px;
                 }
+
+                .bot--templates {
+                    margin: 10px 0 0 0;
+                }
             `;
 
             const style = document.createElement('style');
@@ -226,27 +253,48 @@ var bot = {
         textArr: ['🎈'],
         input: '',
         counter: 1,
+        msgCounter: 1,
         loop: true,
-        isReplyMode: true,
+        isReplyMode: false,
+        template: null,
+        msg: '',
 
         insert(){
-            if(this.textArr.length === 1){
-                this.counter = 1;
-                this.input.value += this.textArr[0];
+            
+            switch(this.template){
+                case 'increment': {
+                    this.initialMsg = this.textArr[0];
+                    this.msg += this.initialMsg;
 
-            } else {
-                if(this.counter <= this.textArr.length){
-                    this.input.value = this.textArr[this.counter-1];
-                    this.counter++;
+                    this.input.value = this.msg;
+                    
+                    this.msgCounter++;
+                } break;
 
-                } else if(!this.loop){
-                    this.counter = 1;
-                    bot.stop()
+                default: {
+                    if(this.textArr.length === 1){
+                        this.counter = 1;
+                        this.input.value += this.textArr[0];
 
-                } else {
-                    this.input.value = this.textArr[0];
-                    this.counter = 1;
-                    // this.input.value += this.textArr[this.textArr.length];
+                    } else if(this.textArr.length <= 0) {
+                        bot.stop();
+
+                    } else {
+                        if(this.counter <= this.textArr.length){
+                            this.input.value = this.textArr[this.counter-1];
+                            this.counter++;
+                            // console.log('added to counter');
+
+                        } else if(!this.loop){
+                            this.counter = 1;
+                            bot.stop()
+
+                        } else {
+                            this.input.value = this.textArr[0];
+                            this.counter = 1;
+                            // this.input.value += this.textArr[this.textArr.length];
+                        }
+                    }
                 }
             }
         },
@@ -257,6 +305,19 @@ var bot = {
 
         setReply(state){
             this.isReplyMode = state;
+        },
+
+        setTemplate(temp){
+            if(temp === 'waves'){
+                this.textArr = [ "🎈", "🎈🎈", "🎈🎈🎈", "🎈🎈🎈🎈", "🎈🎈🎈🎈🎈", "🎈🎈🎈🎈", "🎈🎈🎈", "🎈🎈", "🎈"];
+                this.updateList();
+            }
+            else if(temp !== 'NONE')
+                this.template = temp;
+            else
+                this.template = null;
+            
+            this.reset();
         },
 
         addMessage(msg){
@@ -284,18 +345,17 @@ var bot = {
                 msgNode.dataset.id = id;
                 msgNode.appendChild(msg);
                 msgNode.classList.add('bot--queue-item');
-                // msgNode.setAttribute('style',`
-                //     padding: 2px;
-                //     background: #fff9;
-                //     color: black;
-                //     border-top: 1px solid #777;
-                //     max-width: 100%;
-                //     overflow: auto;
-                //     cursor: pointer;
-                // `);
 
                 bot.cp.list.appendChild(msgNode);
             });
+
+            this.reset();
+        },
+
+        reset(){
+            this.counter = 1;
+            this.msgCounter = 1;
+            this.msg = '';
         },
 
         init(){
@@ -334,6 +394,7 @@ var bot = {
             clearInterval(this.botInterval);
             this.botInterval = 0;
             this.isRunning = false;
+            this.text.reset();
         }
     },
 
@@ -347,8 +408,10 @@ var bot = {
     },
 
     leaveIfDisconnected(){
-        if(this.btn.classList.contains('disabled') && this.isAutoNext)
+        if(this.btn.classList.contains('disabled') && this.isAutoNext){
             this.btnEsc.click();
+            this.text.reset();
+        }
     },
 
     toggle(){
