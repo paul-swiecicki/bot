@@ -21,6 +21,14 @@ var bot = {
             const oldBotPanel = document.querySelector('#botPanel');
             oldBotPanel ? (oldBotPanel.remove()) : null;
 
+            const oldSortablejs = document.querySelector('#sortablejs');
+            oldSortablejs ? (oldSortablejs.remove()) : null;
+
+            const sortablejs = document.createElement('script');
+            sortablejs.id = 'sortablejs';
+            sortablejs.src = 'https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js';
+            body.appendChild(sortablejs);
+
             this.all = document.createElement('div');
             this.all.setAttribute('style',`
                 display: flex;
@@ -153,9 +161,15 @@ var bot = {
             });
 
             this.list = document.createElement('div');
+            this.list.id = 'bot--list';
             this.list.addEventListener('click', e => {
                 bot.text.removeMessage(e.target.dataset.id);
             });
+            Sortable.create(this.list, {
+                group: 'botQueue',
+                animation: 100
+            });
+
             this.listForm.addEventListener('submit', e => {
                 e.preventDefault();
                 const msg = this.addToList.value;
