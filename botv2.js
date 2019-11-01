@@ -20,17 +20,36 @@ var bot = {
 
             const oldBotPanel = document.querySelector('#botPanel');
             oldBotPanel ? (oldBotPanel.remove()) : null;
+
+            this.all = document.createElement('div');
+            this.all.setAttribute('style',`
+                display: flex;
+                flex-flow: column;
+                justify-content: center;
+                margin: 10px 0 0;
+            `);
+
+            const createCheckbox = (parentEl, el, setFunction, label, checked = false) => {
+                this[parentEl] = document.createElement('div');
+                this[parentEl].appendChild(document.createTextNode(label))
+                this[el] = document.createElement('input');
+                this[el].type = 'checkbox';
+                this[el].checked = checked;
+                this[el].addEventListener('change', e => {
+                    if(e.target.checked){
+                        bot.text[setFunction](true);
+                    } else {
+                        bot.text[setFunction](false);
+                    }
+                });
+                this[parentEl].appendChild(this[el]);
+                this.all.appendChild(this[parentEl]);
+            }
  
             this.hideBtn = document.createElement('span');
             this.hideBtn.appendChild(document.createTextNode('HIDE'))
-            this.hideBtn.setAttribute('style',`
-                padding: 5px;
-                background: red;
-                color: white;
-                border: 2px solid white;
-                cursor: pointer;
-                margin: 0 0 10px;
-            `);
+            this.hideBtn.classList.add('bot--btn');
+            this.hideBtn.id = 'bot--hide-btn';
             this.hideBtn.addEventListener('click', e => {
                 if(this.isHidden){
                     this.hideBtn.style.setProperty('background','red');
@@ -52,32 +71,17 @@ var bot = {
             `);
 
             this.btn = document.createElement('button');
-            this.btn.className = 'botSwitch';
+            this.btn.classList.add('bot--btn');
+            this.btn.id = 'bot--switch';
             this.btn.appendChild(document.createTextNode('ON/OFF'))
-            this.btn.setAttribute('style',`
-                padding: 10px;
-                background: red;
-                color: white;
-                border: 2px solid white;
-                cursor: pointer;
-            `);
             this.btn.addEventListener('click', e => {
                 bot.toggle();
             });
 
-            this.loopDiv = document.createElement('div');
-            this.loopDiv.appendChild(document.createTextNode('Loop '))
-            this.loopBox = document.createElement('input');
-            this.loopBox.type = 'checkbox';
-            this.loopBox.checked = true;
-            this.loopBox.addEventListener('change', e => {
-                if(e.target.checked){
-                    bot.text.setLoop(true);
-                } else {
-                    bot.text.setLoop(false);
-                }
-            });
-            this.loopDiv.appendChild(this.loopBox);
+            this.all.appendChild(this.btn);
+
+            createCheckbox('loopDiv','loopBox','setLoop','Loop ',true);
+            createCheckbox('replyDiv','replyBox','setReply','Reply Mode ');
 
             this.rate = document.createElement('div');
             this.rate.setAttribute('style',`
@@ -106,15 +110,9 @@ var bot = {
             this.rate.appendChild(this.rateController);
 
             this.btnAutoNext = document.createElement('button');
-            this.btnAutoNext.className = 'botSwitch';
+            this.btnAutoNext.classList.add('bot--btn');
+            this.btnAutoNext.classList.add('bot--auto-next');
             this.btnAutoNext.appendChild(document.createTextNode('Auto Next'))
-            this.btnAutoNext.setAttribute('style',`
-                padding: 2px;
-                background: red;
-                color: white;
-                border: 2px solid white;
-                cursor: pointer;
-            `);
             this.btnAutoNext.addEventListener('click', e => {
                 bot.toggleAutoNext();
             });
@@ -130,13 +128,8 @@ var bot = {
 
             this.removeQueueBtn = document.createElement('div');
             this.removeQueueBtn.textContent = 'X';
-            this.removeQueueBtn.setAttribute('style',`
-                padding: 2px 6px;
-                background: red;
-                color: white;
-                border: 2px solid white;
-                cursor: pointer;
-            `);
+            this.removeQueueBtn.classList.add('bot--btn');
+            this.removeQueueBtn.id = 'bot--remove-queue';
             this.removeQueueBtn.addEventListener('click', e => {
                 bot.text.removeQueue();
             });
@@ -166,16 +159,6 @@ var bot = {
             this.listForm.appendChild(this.upperDiv);
             this.listForm.appendChild(this.list);
 
-            this.all = document.createElement('div');
-            this.all.setAttribute('style',`
-                display: flex;
-                flex-flow: column;
-                justify-content: center;
-                margin: 10px 0 0;
-            `);
-
-            this.all.appendChild(this.btn);
-            this.all.appendChild(this.loopDiv);
             this.all.appendChild(this.rate);
             this.all.appendChild(this.btnAutoNext);
             this.all.appendChild(this.listForm);
@@ -189,22 +172,51 @@ var bot = {
         },
 
         stylize(){
-            var css = `
-                #botPanel {
-
+            const css = `
+                .bot--queue-item {
+                    padding: 2px;
+                    background: #fff9;
+                    color: black;
+                    border-top: 1px solid #777;
+                    max-width: 100%;
+                    overflow: auto;
+                    cursor: pointer;
                 }
-                
-                
-                
+
+                .bot--btn {
+                    padding: 5px;
+                    background: red;
+                    color: white;
+                    border: 2px solid white;
+                    cursor: pointer;
+                }
+
+                #bot--switch {
+                    padding: 10px;
+                }
+
+                #bot--hide-btn {
+                    margin: 0 0 10px;
+                }
+
+                #bot--remove-queue {
+                    padding: 2px 6px;
+                }
             `;
 
-            var style = document.createElement('style');
+            const style = document.createElement('style');
+
+            style.id = 'botStyle';
 
             if (style.styleSheet) {
                 style.styleSheet.cssText = css;
             } else {
                 style.appendChild(document.createTextNode(css));
             }
+
+            const oldBotStyle = document.querySelector('#botStyle');
+
+            oldBotStyle ? oldBotStyle.remove() : null;
 
             document.getElementsByTagName('head')[0].appendChild(style);
         }
@@ -215,10 +227,9 @@ var bot = {
         input: '',
         counter: 1,
         loop: true,
+        isReplyMode: true,
 
         insert(){
-            this.input = bot.inp;
-
             if(this.textArr.length === 1){
                 this.counter = 1;
                 this.input.value += this.textArr[0];
@@ -242,6 +253,10 @@ var bot = {
 
         setLoop(state){
             this.loop = state;
+        },
+
+        setReply(state){
+            this.isReplyMode = state;
         },
 
         addMessage(msg){
@@ -268,18 +283,23 @@ var bot = {
                 const msgNode = document.createElement('div');
                 msgNode.dataset.id = id;
                 msgNode.appendChild(msg);
-                msgNode.setAttribute('style',`
-                    padding: 2px;
-                    background: #fff9;
-                    color: black;
-                    border-top: 1px solid #777;
-                    max-width: 100%;
-                    overflow: auto;
-                    cursor: pointer;
-                `);
+                msgNode.classList.add('bot--queue-item');
+                // msgNode.setAttribute('style',`
+                //     padding: 2px;
+                //     background: #fff9;
+                //     color: black;
+                //     border-top: 1px solid #777;
+                //     max-width: 100%;
+                //     overflow: auto;
+                //     cursor: pointer;
+                // `);
 
                 bot.cp.list.appendChild(msgNode);
             });
+        },
+
+        init(){
+            this.input = bot.inp;
         }
     },
 
@@ -290,17 +310,18 @@ var bot = {
 
         this.botInterval = setInterval( () => {
 
-            this.text.insert();
-
-            if(this.btn){
-                this.btn.click();
+            if(this.text.isReplyMode){
+                try {
+                    if(this.log.lastChild.classList.contains('log-stranger')){
+                        this.text.insert();
+                        this.sendMsg();
+                    }
+                } catch(err){}
             } else {
-                this.inp.dispatchEvent(new Event('focus'));
-                this.inp.dispatchEvent(new KeyboardEvent('keypress',{keyCode:13}));
+                this.text.insert();
+                this.sendMsg();
             }
-
-            if(this.btn.classList.contains('disabled') && this.isAutoNext)
-                this.btnEsc.click();
+            this.leaveIfDisconnected();
         
         }, this.rate)
  
@@ -314,6 +335,20 @@ var bot = {
             this.botInterval = 0;
             this.isRunning = false;
         }
+    },
+
+    sendMsg(){
+        if(this.btn){
+            this.btn.click();
+        } else {
+            this.inp.dispatchEvent(new Event('focus'));
+            this.inp.dispatchEvent(new KeyboardEvent('keypress',{keyCode:13}));
+        }
+    },
+
+    leaveIfDisconnected(){
+        if(this.btn.classList.contains('disabled') && this.isAutoNext)
+            this.btnEsc.click();
     },
 
     toggle(){
@@ -347,8 +382,10 @@ var bot = {
         this.btn = btnQuery ? document.querySelector(btnQuery) : null;
         this.btnEsc = btnEscQuery ? document.querySelector(btnEscQuery) : null;
         this.inp = inputQuery ? document.querySelector(inputQuery) : null;
+        this.log = document.querySelector('#log-dynamic');
  
         this.cp.init();
+        this.text.init();
         this.text.updateList();
     },
 }
