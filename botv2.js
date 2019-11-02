@@ -30,35 +30,42 @@ var bot = {
             body.appendChild(sortablejs);
 
             this.all = document.createElement('div');
-            this.all.setAttribute('style',`
-                display: flex;
-                flex-flow: column;
-                justify-content: center;
-                margin: 10px 0 0;
-            `);
+            this.all.id = 'bot--all-without-hide-btn'
 
-            const createCheckbox = (parentEl, el, setFunction, label, checked = false) => {
-                this[parentEl] = document.createElement('div');
-                this[parentEl].appendChild(document.createTextNode(label))
+            const createParentDivAndAppend = (el, childEl) => { //childEl must be an array
+                this[el] = document.createElement('div');
+
+                for(let i=0; i<childEl.length; i++){
+                    this[el].appendChild(this[childEl[i]]);
+                }
+                this.all.appendChild(this[el]);
+            }
+
+            const createCheckbox = (parentEl, el, setFunction, label, checked = false, disabled = false, fn) => {
                 this[el] = document.createElement('input');
                 this[el].type = 'checkbox';
                 this[el].checked = checked;
+                this[el].disabled = disabled;
                 this[el].addEventListener('change', e => {
-                    if(e.target.checked){
-                        bot.text[setFunction](true);
-                    } else {
-                        bot.text[setFunction](false);
-                    }
+                    const chked = e.target.checked;
+                    bot.text[setFunction](chked);
+                    if(fn) fn(chked)
                 });
-                this[parentEl].appendChild(this[el]);
-                this.all.appendChild(this[parentEl]);
+
+                createParentDivAndAppend(parentEl, [el]);
+                this[parentEl].appendChild(document.createTextNode(label));
+            }
+            
+            const createBtn = (btn, text, classes, clickFn) => {
+                this[btn] = document.createElement('button');
+                this[btn].classList.add(...classes);
+                this[btn].appendChild(document.createTextNode(text))
+                this[btn].addEventListener('click', clickFn);
+                this.all.appendChild(this[btn]);
             }
  
-            this.hideBtn = document.createElement('span');
-            this.hideBtn.appendChild(document.createTextNode('HIDE'))
-            this.hideBtn.classList.add('bot--btn');
-            this.hideBtn.id = 'bot--hide-btn';
-            this.hideBtn.addEventListener('click', e => {
+            createBtn('hideBtn', 'HIDE', ['bot--btn', 'bot--hide-btn'],
+            e => {
                 if(this.isHidden){
                     this.hideBtn.style.setProperty('background','red');
                     this.all.style.setProperty('display', 'flex');
@@ -71,35 +78,24 @@ var bot = {
 
             this.panel = document.createElement('div');
             this.panel.id = 'botPanel';
-            this.panel.setAttribute('style',`
-                padding: 10px;
-                z-index: 1000;
-                position: absolute;
-                width: 300px;
-            `);
 
-            this.btn = document.createElement('button');
-            this.btn.classList.add('bot--btn');
-            this.btn.id = 'bot--switch';
-            this.btn.appendChild(document.createTextNode('ON/OFF'))
-            this.btn.addEventListener('click', e => {
+            createBtn('btn', 'ON/OFF', ['bot--btn', 'bot--switch'],
+            e => {
                 bot.toggle();
             });
 
             this.all.appendChild(this.btn);
 
             createCheckbox('loopDiv','loopBox','setLoop','Loop ',true);
-            createCheckbox('replyDiv','replyBox','setReply','Reply Mode ');
+            createCheckbox('replyDiv','replyBox','setReply','Reply Mode ', false, false, (chked) => { this.replyAllBox.disabled = !chked });
+            createCheckbox('replyAllDiv','replyAllBox','setReplyAll',' - Send whole queue', false, true);
 
-            this.rate = document.createElement('div');
-            this.rate.setAttribute('style',`
-                margin: 10px 0;
-                color: white;
-            `);
+            // this.rate = document.createElement('div');
             this.rateText = document.createElement('div');
             this.rateText.appendChild(document.createTextNode(`Send once/${bot.rate}ms`));
             
             this.rateController = document.createElement('input');
+            this.rateController.id = 'bot--rate-controller';
             this.rateController.type = 'range';
             this.rateController.min = 0;
             this.rateController.max = 1000;
@@ -109,19 +105,12 @@ var bot = {
                 let rate = e.target.value;
                 bot.changeRate(rate);
             });
-            this.rateController.setAttribute('style',`
-                cursor: pointer;
-                width: 100%;
-            `);
+            
+            createParentDivAndAppend('rate', ['rateText', 'rateController'])
+            this.rate.id = 'bot--rate';
 
-            this.rate.appendChild(this.rateText);
-            this.rate.appendChild(this.rateController);
-
-            this.btnAutoNext = document.createElement('button');
-            this.btnAutoNext.classList.add('bot--btn');
-            this.btnAutoNext.classList.add('bot--auto-next');
-            this.btnAutoNext.appendChild(document.createTextNode('Auto Next'))
-            this.btnAutoNext.addEventListener('click', e => {
+            createBtn('btnAutoNext', 'Auto Next', ['bot--btn', 'bot--auto-next'],
+            e => {
                 bot.toggleAutoNext();
             });
 
@@ -129,7 +118,7 @@ var bot = {
             this.templates.classList.add('bot--templates');
             this.select = document.createElement('select');
 
-            const optionsArr = ['NONE','increment', 'waves'];
+            const optionsArr = ['NONE','increment', 'waves', 'parrot'];
             for(let i=0; i<optionsArr.length; i++){
                 const opt = document.createElement('option');
 
@@ -142,9 +131,7 @@ var bot = {
             this.select.addEventListener('change', e => {
                 bot.text.setTemplate(e.target.value);
             });
-
-            this.listForm = document.createElement('form');
-            this.upperDiv = document.createElement('div');
+            this.all.appendChild(this.templates);
 
             this.addToList = document.createElement('input');
             this.addToList.placeholder = 'Add to message queue';
@@ -160,16 +147,28 @@ var bot = {
                 bot.text.removeQueue();
             });
 
+            this.upperDiv = document.createElement('div');
+            this.upperDiv.id = 'bot--list-control';
+            this.upperDiv.appendChild(this.addToList);
+            this.upperDiv.appendChild(this.removeQueueBtn);
+
             this.list = document.createElement('div');
             this.list.id = 'bot--list';
             this.list.addEventListener('click', e => {
                 bot.text.removeMessage(e.target.dataset.id);
             });
-            Sortable.create(this.list, {
-                group: 'botQueue',
-                animation: 100
+            this.list.addEventListener('drop', e => {
+                const kids = this.list.children;
+                const newTextArr = [];
+                
+                for(let i=0; i<kids.length; i++){
+                    newTextArr.push(kids[i].textContent);
+                }
+
+                bot.text.mutateTextArr(newTextArr);
             });
 
+            this.listForm = document.createElement('form');
             this.listForm.addEventListener('submit', e => {
                 e.preventDefault();
                 const msg = this.addToList.value;
@@ -177,23 +176,16 @@ var bot = {
 
                 this.addToList.value = '';
             });
-
-            this.upperDiv.setAttribute('style',`
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin: 10px 0 5px;
-            `);
-
-            this.upperDiv.appendChild(this.addToList);
-            this.upperDiv.appendChild(this.removeQueueBtn);
-
             this.listForm.appendChild(this.upperDiv);
             this.listForm.appendChild(this.list);
 
-            this.all.appendChild(this.rate);
-            this.all.appendChild(this.btnAutoNext);
-            this.all.appendChild(this.templates);
+            setTimeout(() => {
+                Sortable.create(this.list, {
+                    group: 'botQueue',
+                    animation: 100
+                });
+            }, 100)
+            
             this.all.appendChild(this.listForm);
 
             this.panel.appendChild(this.hideBtn);
@@ -208,6 +200,18 @@ var bot = {
             const css = `
                 #botPanel {
                     color: white;
+                    padding: 10px;
+                    z-index: 1000;
+                    position: absolute;
+                    width: 300px;
+                    background: #0008;
+                }
+
+                #bot--all-without-hide-btn {
+                    display: flex;
+                    flex-flow: column;
+                    justify-content: center;
+                    margin: 10px 0 0;
                 }
 
                 .bot--queue-item {
@@ -220,6 +224,16 @@ var bot = {
                     cursor: pointer;
                 }
 
+                #bot--rate {
+                    margin: 10px 0;
+                    color: white;
+                }
+
+                #bot--rate-controller {
+                    cursor: pointer;
+                    width: 100%;
+                }
+
                 .bot--btn {
                     padding: 5px;
                     background: red;
@@ -228,16 +242,23 @@ var bot = {
                     cursor: pointer;
                 }
 
-                #bot--switch {
+                .bot--switch {
                     padding: 10px;
                 }
 
-                #bot--hide-btn {
-                    margin: 0 0 10px;
+                .bot--hide-btn {
+
                 }
 
-                #bot--remove-queue {
+                .bot--remove-queue {
                     padding: 2px 6px;
+                }
+
+                #bot--list-control {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin: 10px 0 5px;
                 }
 
                 .bot--templates {
@@ -270,43 +291,40 @@ var bot = {
         msgCounter: 1,
         loop: true,
         isReplyMode: false,
+        isReplyAll: false,
         template: null,
         msg: '',
 
-        insert(){
-            
+        insert(){       
             switch(this.template){
+                case 'parrot': {
+                    const strangerMsg = bot.log.lastChild.textContent;
+                    const msg = strangerMsg.replace(/Obcy:\s/, '');
+                    this.input.value = msg;
+                } break;
+
                 case 'increment': {
                     this.initialMsg = this.textArr[0];
                     this.msg += this.initialMsg;
-
                     this.input.value = this.msg;
-                    
                     this.msgCounter++;
                 } break;
 
                 default: {
                     if(this.textArr.length === 1){
                         this.counter = 1;
-                        this.input.value += this.textArr[0];
+                        this.input.value = this.textArr[0];
 
                     } else if(this.textArr.length <= 0) {
                         bot.stop();
 
                     } else {
-                        if(this.counter <= this.textArr.length){
-                            this.input.value = this.textArr[this.counter-1];
-                            this.counter++;
-                            // console.log('added to counter');
+                        this.input.value = this.textArr[this.counter-1];
+                        this.counter++;
 
-                        } else if(!this.loop){
+                        if(this.counter > this.textArr.length){
                             this.counter = 1;
-                            bot.stop()
-
-                        } else {
-                            this.input.value = this.textArr[0];
-                            this.counter = 1;
-                            // this.input.value += this.textArr[this.textArr.length];
+                            if(!this.loop) bot.stop();
                         }
                     }
                 }
@@ -321,11 +339,16 @@ var bot = {
             this.isReplyMode = state;
         },
 
+        setReplyAll(state){
+            this.isReplyAll = state;
+        },
+
         setTemplate(temp){
             if(temp === 'waves'){
-                this.textArr = [ "🎈", "🎈🎈", "🎈🎈🎈", "🎈🎈🎈🎈", "🎈🎈🎈🎈🎈", "🎈🎈🎈🎈", "🎈🎈🎈", "🎈🎈", "🎈"];
-                this.updateList();
-            }
+                this.mutateTextArr([ "🎈", "🎈🎈", "🎈🎈🎈", "🎈🎈🎈🎈", "🎈🎈🎈🎈🎈", "🎈🎈🎈🎈", "🎈🎈🎈", "🎈🎈", "🎈"])
+                this.template = null;
+            } else if(temp === 'parrot')
+                this.template = 'parrot';
             else if(temp !== 'NONE')
                 this.template = temp;
             else
@@ -334,9 +357,16 @@ var bot = {
             this.reset();
         },
 
+        mutateTextArr(newTextArr){
+            this.textArr = newTextArr;
+            this.updateList();
+        },
+
         addMessage(msg){
             if(msg){
-                this.textArr.push(msg);
+                const msgWithSpaces = msg.replace(/\s/g,'\xa0')
+
+                this.textArr.push(msgWithSpaces);
                 this.updateList();
             }
         },
@@ -386,7 +416,7 @@ var bot = {
 
             if(this.text.isReplyMode){
                 try {
-                    if(this.log.lastChild.classList.contains('log-stranger')){
+                    if(this.log.lastChild.classList.contains('log-stranger') || (this.text.isReplyAll && this.text.counter > 1)){
                         this.text.insert();
                         this.sendMsg();
                     }
@@ -413,12 +443,14 @@ var bot = {
     },
 
     sendMsg(){
-        if(this.btn){
-            this.btn.click();
-        } else {
-            this.inp.dispatchEvent(new Event('focus'));
-            this.inp.dispatchEvent(new KeyboardEvent('keypress',{keyCode:13}));
-        }
+        // if(this.btn){
+        this.btn.click();
+        const confirmBtn = document.querySelector('.sd-interface button');
+        confirmBtn ? confirmBtn.click() : null;
+        // } else {
+        //     this.inp.dispatchEvent(new Event('focus'));
+        //     this.inp.dispatchEvent(new KeyboardEvent('keypress',{keyCode:13}));
+        // }
     },
 
     leaveIfDisconnected(){
@@ -438,7 +470,6 @@ var bot = {
 
     changeRate(rate){
         this.rate = rate;
-        //console.log(this.cp.rateText);
         this.cp.rateText.innerText = `Send once/${this.rate}ms`;
 
         if(this.isRunning)
