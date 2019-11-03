@@ -92,7 +92,7 @@ var bot = {
 
             // this.rate = document.createElement('div');
             this.rateText = document.createElement('div');
-            this.rateText.appendChild(document.createTextNode(`Send once/${bot.rate}ms`));
+            this.rateText.appendChild(document.createTextNode('Send once/'+bot.rate+'ms'));
             
             this.rateController = document.createElement('input');
             this.rateController.id = 'bot--rate-controller';
@@ -135,9 +135,7 @@ var bot = {
 
             this.addToList = document.createElement('input');
             this.addToList.placeholder = 'Add to message queue';
-            this.addToList.setAttribute('style',`
-                width: 70%;
-            `);
+            this.addToList.setAttribute('style','width: 70%');
 
             this.removeQueueBtn = document.createElement('div');
             this.removeQueueBtn.textContent = 'X';
@@ -618,7 +616,7 @@ var bot = {
 
     changeRate(rate){
         this.rate = rate;
-        this.cp.rateText.innerText = `Send once/${this.rate}ms`;
+        this.cp.rateText.innerText = 'Send once/'+this.rate+'ms';
 
         if(this.isRunning)
             this.start();
