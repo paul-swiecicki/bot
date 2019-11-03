@@ -32,13 +32,13 @@ var bot = {
             this.all = document.createElement('div');
             this.all.id = 'bot--all-without-hide-btn'
 
-            const createParentDivAndAppend = (el, childEl) => { //childEl must be an array
+            const createParentDivAndAppend = (el, childEl, parentEl = 'all') => { //childEl must be an array
                 this[el] = document.createElement('div');
 
                 for(let i=0; i<childEl.length; i++){
                     this[el].appendChild(this[childEl[i]]);
                 }
-                this.all.appendChild(this[el]);
+                this[parentEl].appendChild(this[el]);
             }
 
             const createCheckbox = (parentEl, el, setFunction, label, checked = false, disabled = false, fn) => {
@@ -56,12 +56,12 @@ var bot = {
                 this[parentEl].appendChild(document.createTextNode(label));
             }
             
-            const createBtn = (btn, text, classes, clickFn) => {
+            const createBtn = (btn, text, classes, clickFn, parentEl = 'all') => {
                 this[btn] = document.createElement('button');
                 this[btn].classList.add(...classes);
                 this[btn].appendChild(document.createTextNode(text))
                 this[btn].addEventListener('click', clickFn);
-                this.all.appendChild(this[btn]);
+                this[parentEl].appendChild(this[btn]);
             }
  
             createBtn('hideBtn', 'HIDE', ['bot--btn', 'bot--hide-btn'],
@@ -188,6 +188,55 @@ var bot = {
             
             this.all.appendChild(this.listForm);
 
+            this.expImp = document.createElement('div');
+            this.exportDiv = document.createElement('div');
+            this.importDiv = document.createElement('div');
+            this.expImp.classList.add('bot--expimp');
+            createBtn('exportBtn', '< Export >', ['bot--btn', 'bot--export'],
+            e => {
+                const sep = this.expSeparation.value;
+                bot.text.export(sep);
+            }, 'exportDiv');
+
+            createBtn('importBtn', '> Import <', ['bot--btn', 'bot--import'],
+            e => {
+                const sep = this.impSeparation.value;
+                const file = this.importFile.files;
+                const text = this.importInput.value;
+
+                const inp = text ? text : file;
+                
+                bot.text.import(sep, inp);
+            }, 'importDiv');
+
+            this.expSeparation = document.createElement('input');
+            this.expSeparation.placeholder = 'sep.';
+            this.expSeparation.id = 'bot--expSep';
+
+            this.impSeparation = document.createElement('input');
+            this.impSeparation.placeholder = 'sep.';
+            this.impSeparation.id = 'bot--impSep';
+
+            this.importFile = document.createElement('input');
+            this.importFile.type = 'file';
+
+            this.exportDiv.classList.add('bot--export-div');
+            this.exportDiv.appendChild(this.expSeparation);
+            this.exportDiv.classList.add('bot--import-div');
+            this.importDiv.appendChild(this.impSeparation);
+            this.importDiv.appendChild(this.importFile);
+
+            // this.importForm = document.createElement('form');
+            this.importInput = document.createElement('input');
+            this.importInput.placeholder = 'Paste or type in some text to import';
+            // this.importForm.appendChild(this.importInput);
+            this.importDiv.appendChild(this.importInput);
+            
+            this.expImp.appendChild(this.exportDiv);
+            this.expImp.appendChild(this.importDiv);
+            this.all.appendChild(this.expImp);
+            // this.all.appendChild(this.importFile);
+
             this.panel.appendChild(this.hideBtn);
             this.panel.appendChild(this.all);
             
@@ -212,6 +261,11 @@ var bot = {
                     flex-flow: column;
                     justify-content: center;
                     margin: 10px 0 0;
+                }
+
+                #bot--list {
+                    max-height: 300px;
+                    overflow: auto;
                 }
 
                 .bot--queue-item {
@@ -263,6 +317,41 @@ var bot = {
 
                 .bot--templates {
                     margin: 10px 0 0 0;
+                }
+
+                .bot--expimp {
+                    margin: 10px 0 5px;
+                    display: flex;
+                    justify-content: space-around;
+                    flex-flow: column;
+                }
+
+                .bot--expimp input[type='file']{
+                    width: 170px;
+                    margin-left: 10px;
+                }
+
+                .bot--expimp input{
+                    width: 100%;
+                }
+
+                .bot--expimp div {
+                    margin-top: 10px;
+                }
+
+                .bot--import {
+                    background: #8f8;
+                    color: black;
+                }
+
+                .bot--export {
+                    background: #f88;
+                    color: black;
+                }
+
+                #bot--impSep, #bot--expSep {
+                    width: 25px;
+                    height: 15px;
                 }
             `;
 
@@ -400,6 +489,65 @@ var bot = {
             this.counter = 1;
             this.msgCounter = 1;
             this.msg = '';
+        },
+
+        download(data, filename, type) {
+            var file = new Blob([data], {type: type});
+            if (window.navigator.msSaveOrOpenBlob) // IE10+
+                window.navigator.msSaveOrOpenBlob(file, filename);
+            else { // Others
+                var a = document.createElement("a"),
+                        url = URL.createObjectURL(file);
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(function() {
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);  
+                }, 0); 
+            }
+        },
+
+        export(sep){
+            const data = this.textArr.join(sep)
+            this.download(data, 'list.txt', 'text/plain');
+        },
+
+        import(sep, input){
+
+            const isPlainText = (typeof input === 'string')
+
+            const splitText = (text) => {
+                const arr = text.split(sep);
+                this.mutateTextArr(arr);
+            }
+
+            if(!isPlainText){
+                const processFile = (e) => {
+                    const text = e.target.result;
+                    splitText(text);
+                }
+    
+                if (!window.FileReader) {
+                    alert('Your browser is not supported');
+                    return false;
+                }
+                // Create a reader object
+                var reader = new FileReader();
+                if (input.length) {
+                    var textFile = input[0];
+                    // Read the file
+                    reader.readAsText(textFile);
+                    // When it's loaded, process it
+                    reader.addEventListener('load', processFile);
+    
+                } else {
+                    alert('Please upload a file or enter some text before continuing')
+                }
+            } else {
+                splitText(input);
+            }
         },
 
         init(){
