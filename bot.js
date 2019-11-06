@@ -98,7 +98,7 @@ var bot = {
             this.rateController.id = 'bot--rate-controller';
             this.rateController.type = 'range';
             this.rateController.min = 0;
-            this.rateController.max = 1000;
+            this.rateController.max = 5000;
             this.rateController.value = 1000;
             this.rateController.step = 1;
             this.rateController.addEventListener('change', e => {
@@ -182,7 +182,7 @@ var bot = {
                     group: 'botQueue',
                     animation: 100
                 });
-            }, 100)
+            }, 3000)
             
             this.all.appendChild(this.listForm);
 
@@ -646,3 +646,6 @@ var bot = {
  
 //6obcy
 bot.init('#box-interface-input', 'button.o-any.o-send', 'button.o-any.o-esc');
+
+//e-chat.co
+bot.init('#InputTextArea', '#SendButton', 'null');
