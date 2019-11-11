@@ -1,7 +1,7 @@
 var bot = {
  
     botInterval: 0,
-    rate: 1000,
+    rate: 500,
     isRunning: false,
     isAutoNext: false,
 
@@ -63,6 +63,23 @@ var bot = {
                 this[btn].addEventListener('click', clickFn);
                 this[parentEl].appendChild(this[btn]);
             }
+
+            const createRange = (parentEl, parentElId, label, labelText, controller, controllerId, min, max, value, step, fn) => {
+                this[label] = document.createElement('span');
+                this[label].innerHTML = labelText;
+                
+                this[controller] = document.createElement('input');
+                this[controller].id = controllerId;
+                this[controller].type = 'range';
+                this[controller].min = min;
+                this[controller].max = max;
+                this[controller].value = value;
+                this[controller].step = step;
+                this[controller].addEventListener('input', fn);
+
+                createParentDivAndAppend(parentEl, [label, controller])
+                this.rate.id = parentElId;
+            }
  
             createBtn('hideBtn', 'HIDE', ['bot--btn', 'bot--hide-btn'],
             e => {
@@ -88,26 +105,14 @@ var bot = {
 
             createCheckbox('loopDiv','loopBox','setLoop','Loop ',true);
             createCheckbox('replyDiv','replyBox','setReply','Reply Mode ', false, false, (chked) => { this.replyAllBox.disabled = !chked });
-            createCheckbox('replyAllDiv','replyAllBox','setReplyAll',' - Send whole queue', false, true);
+            createCheckbox('replyAllDiv','replyAllBox','setReplyAll',' - Send whole queue', true, true);
 
-            // this.rate = document.createElement('div');
-            this.rateText = document.createElement('div');
-            this.rateText.appendChild(document.createTextNode('Send once/'+bot.rate+'ms'));
-            
-            this.rateController = document.createElement('input');
-            this.rateController.id = 'bot--rate-controller';
-            this.rateController.type = 'range';
-            this.rateController.min = 0;
-            this.rateController.max = 5000;
-            this.rateController.value = 1000;
-            this.rateController.step = 1;
-            this.rateController.addEventListener('change', e => {
+            createRange('rate', 'bot--rate', 'rateText', 'Send once/<span id="bot--rate-gauge">'+bot.rate+'ms</span>', 'rateController', 'bot--rate-controller', 0, 10000, bot.rate, 1, 
+            e => {
                 let rate = e.target.value;
                 bot.changeRate(rate);
             });
-            
-            createParentDivAndAppend('rate', ['rateText', 'rateController'])
-            this.rate.id = 'bot--rate';
+            setTimeout(() => this.rateGauge = document.querySelector('#bot--rate-gauge'), 0);
 
             createBtn('btnAutoNext', 'Auto Next', ['bot--btn', 'bot--auto-next'],
             e => {
@@ -118,7 +123,7 @@ var bot = {
             this.templates.classList.add('bot--templates');
             this.select = document.createElement('select');
 
-            const optionsArr = ['NONE','increment', 'waves', 'parrot'];
+            const optionsArr = ['NONE','increment', 'waves', 'parrot', 'Bałkanica'];
             for(let i=0; i<optionsArr.length; i++){
                 const opt = document.createElement('option');
 
@@ -135,19 +140,21 @@ var bot = {
 
             this.addToList = document.createElement('input');
             this.addToList.placeholder = 'Add to message queue';
-            this.addToList.setAttribute('style','width: 70%');
+            this.addToList.setAttribute('style','width: 80%');
 
-            this.removeQueueBtn = document.createElement('div');
-            this.removeQueueBtn.textContent = 'X';
-            this.removeQueueBtn.classList.add('bot--btn');
-            this.removeQueueBtn.id = 'bot--remove-queue';
-            this.removeQueueBtn.addEventListener('click', e => {
+            createBtn('resetQueueBtn', 'R', ['bot--btn'], e => {
+                bot.text.reset();
+            });
+
+            createBtn('removeQueueBtn', 'X', ['bot--btn'], e => {
                 bot.text.removeQueue();
             });
+            this.removeQueueBtn.id = 'bot--remove-queue';
 
             this.upperDiv = document.createElement('div');
             this.upperDiv.id = 'bot--list-control';
             this.upperDiv.appendChild(this.addToList);
+            this.upperDiv.appendChild(this.resetQueueBtn);
             this.upperDiv.appendChild(this.removeQueueBtn);
 
             this.list = document.createElement('div');
@@ -225,7 +232,7 @@ var bot = {
             this.importDiv.appendChild(this.importFile);
 
             // this.importForm = document.createElement('form');
-            this.importInput = document.createElement('input');
+            this.importInput = document.createElement('textarea');
             this.importInput.placeholder = 'Paste or type in some text to import';
             // this.importForm.appendChild(this.importInput);
             this.importDiv.appendChild(this.importInput);
@@ -276,6 +283,14 @@ var bot = {
                     cursor: pointer;
                 }
 
+                .bot--list-active-el {
+                    background: #fffc;
+                }
+
+                #bot--list-control input, .bot--queue-item {
+                    font-size: 15px;
+                }
+
                 #bot--rate {
                     margin: 10px 0;
                     color: white;
@@ -284,6 +299,10 @@ var bot = {
                 #bot--rate-controller {
                     cursor: pointer;
                     width: 100%;
+                }
+
+                #bot--rate-gauge {
+                    font-weight: bold;
                 }
 
                 .bot--btn {
@@ -351,6 +370,11 @@ var bot = {
                     width: 25px;
                     height: 15px;
                 }
+
+                textarea {
+                    width: 100%;
+                    resize: none;
+                }
             `;
 
             const style = document.createElement('style');
@@ -378,7 +402,7 @@ var bot = {
         msgCounter: 1,
         loop: true,
         isReplyMode: false,
-        isReplyAll: false,
+        isReplyAll: true,
         template: null,
         msg: '',
 
@@ -398,24 +422,27 @@ var bot = {
                 } break;
 
                 default: {
-                    if(this.textArr.length === 1){
+                    if(this.listLength === 1){
                         this.counter = 1;
                         this.input.value = this.textArr[0];
 
-                    } else if(this.textArr.length <= 0) {
+                    } else if(this.listLength <= 0) {
                         bot.stop();
 
                     } else {
                         this.input.value = this.textArr[this.counter-1];
                         this.counter++;
 
-                        if(this.counter > this.textArr.length){
+                        if(this.counter > this.listLength){
                             this.counter = 1;
                             if(!this.loop) bot.stop();
                         }
                     }
                 }
             }
+
+            this.list.children[this.counter-1].classList.add('bot--list-active-el');
+            this.list.children[this.counter === 1 ? this.listLength-1 : this.counter-2].classList.remove('bot--list-active-el');
         },
 
         setLoop(state){
@@ -430,13 +457,58 @@ var bot = {
             this.isReplyAll = state;
         },
 
+        queueTemplate(arr){
+            this.mutateTextArr(arr);
+            this.template = null;
+            bot.cp.select.value = 'NONE';
+        },
+
         setTemplate(temp){
-            if(temp === 'waves'){
-                this.mutateTextArr([ "🎈", "🎈🎈", "🎈🎈🎈", "🎈🎈🎈🎈", "🎈🎈🎈🎈🎈", "🎈🎈🎈🎈", "🎈🎈🎈", "🎈🎈", "🎈"])
-                this.template = null;
-            } else if(temp === 'parrot')
+            if(temp === 'waves') this.queueTemplate([ "🎈", "🎈🎈", "🎈🎈🎈", "🎈🎈🎈🎈", "🎈🎈🎈🎈🎈", "🎈🎈🎈🎈", "🎈🎈🎈", "🎈🎈", "🎈"]);
+            else if(temp === 'Bałkanica'){
+                const text = `Bałkańska w żyłach płynie krew,
+                kobiety, wino, taniec, śpiew.
+                Zasady proste w życiu mam,
+                nie rób drugiemu tego-
+                czego ty nie chcesz sam!
+                Muzyka, przyjaźń, radość, śmiech.
+                Życie łatwiejsze staje się.
+                Przynieście dla mnie wina dzban,
+                potem ruszamy razem w tan.
+                Będzie! Będzie zabawa!
+                Będzie się działo!
+                I znowu nocy będzie mało.
+                Będzie głośno, będzie radośnie
+                Znów przetańczymy razem całą noc.
+                Będzie! Będzie zabawa!
+                Będzie się działo!
+                I znowu nocy będzie mało.
+                Będzie głośno, będzie radośnie
+                Znów przetańczymy razem całą noc.
+                Orkiestra nie oszczędza sił
+                już trochę im brakuje tchu.
+                Polejcie wina również im
+                znów na parkiecie będzie dym.
+                Bałkańskie rytmy, Polska moc!
+                Znów przetańczymy całą noc.
+                I jeszcze jeden malutki wina dzban
+                i znów ruszymy razem w tan!
+                Będzie! Będzie zabawa!
+                Będzie się działo!
+                I znowu nocy będzie mało.
+                Będzie głośno, będzie radośnie
+                Znów przetańczymy razem całą noc.
+                Będzie! Będzie zabawa!
+                Będzie się działo!
+                I znowu nocy będzie mało.
+                Będzie głośno, będzie radośnie
+                Znów przetańczymy razem całą noc.`;
+
+                this.queueTemplate(text.split('\n'));
+            } else if(temp === 'parrot'){
                 this.template = 'parrot';
-            else if(temp !== 'NONE')
+                bot.cp.replyBox.click();
+            } else if(temp !== 'NONE')
                 this.template = temp;
             else
                 this.template = null;
@@ -451,7 +523,7 @@ var bot = {
 
         addMessage(msg){
             if(msg){
-                const msgWithSpaces = msg.replace(/\s/g,'\xa0')
+                const msgWithSpaces = msg.replace(/\s/g,'\xa0') //\xa0
 
                 this.textArr.push(msgWithSpaces);
                 this.updateList();
@@ -469,7 +541,7 @@ var bot = {
         },
 
         updateList(){
-            bot.cp.list.innerHTML = '';
+            this.list.innerHTML = '';
             this.textArr.map((item, id) => {
                 const msg = document.createTextNode(item);
                 const msgNode = document.createElement('div');
@@ -477,13 +549,16 @@ var bot = {
                 msgNode.appendChild(msg);
                 msgNode.classList.add('bot--queue-item');
 
-                bot.cp.list.appendChild(msgNode);
+                this.list.appendChild(msgNode);
             });
+            this.listLength = this.textArr.length;
 
             this.reset();
         },
 
         reset(){
+            this.list.children[this.counter-1].classList.remove('bot--list-active-el');
+
             this.counter = 1;
             this.msgCounter = 1;
             this.msg = '';
@@ -495,7 +570,7 @@ var bot = {
                 window.navigator.msSaveOrOpenBlob(file, filename);
             else { // Others
                 var a = document.createElement("a"),
-                        url = URL.createObjectURL(file);
+                url = URL.createObjectURL(file);
                 a.href = url;
                 a.download = filename;
                 document.body.appendChild(a);
@@ -509,14 +584,17 @@ var bot = {
 
         export(sep){
             const data = this.textArr.join(sep)
-            this.download(data, 'list.txt', 'text/plain');
+            this.download(data, this.textArr ? this.textArr : list+'.txt', 'text/plain');
         },
 
         import(sep, input){
 
-            const isPlainText = (typeof input === 'string')
+            const isPlainText = (typeof input === 'string');
 
             const splitText = (text) => {
+                if(sep === '\\n')
+                    sep = '\n';
+                
                 const arr = text.split(sep);
                 this.mutateTextArr(arr);
             }
@@ -550,6 +628,7 @@ var bot = {
 
         init(){
             this.input = bot.inp;
+            this.list = bot.cp.list;
         }
     },
 
@@ -584,7 +663,7 @@ var bot = {
             clearInterval(this.botInterval);
             this.botInterval = 0;
             this.isRunning = false;
-            this.text.reset();
+            // this.text.reset();
         }
     },
 
@@ -616,7 +695,8 @@ var bot = {
 
     changeRate(rate){
         this.rate = rate;
-        this.cp.rateText.innerText = 'Send once/'+this.rate+'ms';
+        const time = (this.rate<1000) ? (this.rate+'ms') : ((this.rate/1000).toFixed(1) + 's');
+        this.cp.rateGauge.textContent = time;
 
         if(this.isRunning)
             this.start();
