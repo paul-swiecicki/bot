@@ -648,4 +648,4 @@ var bot = {
 bot.init('#box-interface-input', 'button.o-any.o-send', 'button.o-any.o-esc');
 
 //e-chat.co
-bot.init('#InputTextArea', '#SendButton', 'null');
+// bot.init('#InputTextArea', '#SendButton', 'null');
