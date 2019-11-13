@@ -106,6 +106,7 @@ var bot = {
             createCheckbox('loopDiv','loopBox','setLoop','Loop ',true);
             createCheckbox('replyDiv','replyBox','setReply','Reply Mode ', false, false, (chked) => { this.replyAllBox.disabled = !chked });
             createCheckbox('replyAllDiv','replyAllBox','setReplyAll',' - Send whole queue', true, true);
+            createCheckbox('randomDiv','randomBox','setRandom','Random');
 
             createRange('rate', 'bot--rate', 'rateText', 'Send once/<span id="bot--rate-gauge">'+bot.rate+'ms</span>', 'rateController', 'bot--rate-controller', 0, 10000, bot.rate, 1, 
             e => {
@@ -399,14 +400,16 @@ var bot = {
         textArr: ['🎈'],
         input: '',
         counter: 1,
+        oldCounter: 1,
         msgCounter: 1,
         loop: true,
         isReplyMode: false,
         isReplyAll: true,
+        isRandom: false,
         template: null,
         msg: '',
 
-        insert(){       
+        insert(){
             switch(this.template){
                 case 'parrot': {
                     const strangerMsg = bot.log.lastChild.textContent;
@@ -423,7 +426,7 @@ var bot = {
 
                 default: {
                     if(this.listLength === 1){
-                        this.counter = 1;
+                        if(!this.isRandom) this.counter = 1;
                         this.input.value = this.textArr[0];
 
                     } else if(this.listLength <= 0) {
@@ -431,18 +434,27 @@ var bot = {
 
                     } else {
                         this.input.value = this.textArr[this.counter-1];
-                        this.counter++;
+                        if(!this.isRandom) this.counter++;
 
                         if(this.counter > this.listLength){
-                            this.counter = 1;
+                            if(!this.isRandom) this.counter = 1;
                             if(!this.loop) bot.stop();
                         }
                     }
                 }
             }
 
-            this.list.children[this.counter-1].classList.add('bot--list-active-el');
-            this.list.children[this.counter === 1 ? this.listLength-1 : this.counter-2].classList.remove('bot--list-active-el');
+            if(this.isRandom){
+                this.counter = Math.floor(Math.random()*this.listLength)+1;
+                this.list.children[this.counter-1].classList.add('bot--list-active-el');
+                if(this.oldCounter !== this.counter) 
+                    this.list.children[this.oldCounter-1].classList.remove('bot--list-active-el');
+                this.oldCounter = this.counter;
+                
+            } else {
+                this.list.children[this.counter-1].classList.add('bot--list-active-el');
+                this.list.children[this.counter === 1 ? this.listLength-1 : this.counter-2].classList.remove('bot--list-active-el');
+            }
         },
 
         setLoop(state){
@@ -455,6 +467,10 @@ var bot = {
 
         setReplyAll(state){
             this.isReplyAll = state;
+        },
+
+        setRandom(state){
+            this.isRandom = state;
         },
 
         queueTemplate(arr){
