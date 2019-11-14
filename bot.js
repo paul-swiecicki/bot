@@ -410,6 +410,8 @@ var bot = {
         msg: '',
 
         insert(){
+            if(this.isRandom) this.counter = Math.floor(Math.random()*this.listLength)+1;
+
             switch(this.template){
                 case 'parrot': {
                     const strangerMsg = bot.log.lastChild.textContent;
