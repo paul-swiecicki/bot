@@ -1,6 +1,6 @@
 var bot = {
  
-    version: '1.1.3',
+    version: '1.2',
     botInterval: 0,
     rate: 500,
     isRunning: false,
