@@ -1,5 +1,6 @@
 var bot = {
  
+    version: '1.1.3',
     botInterval: 0,
     rate: 500,
     isRunning: false,
@@ -32,8 +33,8 @@ var bot = {
             this.all = document.createElement('div');
             this.all.id = 'bot--all-without-hide-btn'
 
-            const createParentDivAndAppend = (el, childEl, parentEl = 'all') => { //childEl must be an array
-                this[el] = document.createElement('div');
+            const createParentDivAndAppend = (el, childEl, parentEl = 'all', elType = 'div') => { //childEl must be an array
+                this[el] = document.createElement(elType);
 
                 for(let i=0; i<childEl.length; i++){
                     this[el].appendChild(this[childEl[i]]);
@@ -50,9 +51,12 @@ var bot = {
                     const chked = e.target.checked;
                     bot.text[setFunction](chked);
                     if(fn) fn(chked)
+
+                    this[parentEl].style.setProperty('color', chked ? '#fff' : '#ccc');
                 });
 
-                createParentDivAndAppend(parentEl, [el]);
+                createParentDivAndAppend(parentEl, [el], 'all', 'label');
+                this[parentEl].style.setProperty('color', checked ? '#fff' : '#ccc');
                 this[parentEl].appendChild(document.createTextNode(label));
             }
             
@@ -80,6 +84,15 @@ var bot = {
                 createParentDivAndAppend(parentEl, [label, controller])
                 this.rate.id = parentElId;
             }
+
+            const appendElWithText = (el, classes, text = 'none', parentEl = 'all', elType = 'div') => {
+                this[el] = document.createElement(elType);
+                this[el].classList.add(...classes);
+                const textEl = document.createTextNode(text);
+
+                this[el].appendChild(textEl);
+                this[parentEl].appendChild(this[el]);
+            }
  
             createBtn('hideBtn', 'HIDE', ['bot--btn', 'bot--hide-btn'],
             e => {
@@ -104,7 +117,11 @@ var bot = {
             this.all.appendChild(this.btn);
 
             createCheckbox('loopDiv','loopBox','setLoop','Loop ',true);
-            createCheckbox('replyDiv','replyBox','setReply','Reply Mode ', false, false, (chked) => { this.replyAllBox.disabled = !chked });
+            createCheckbox('replyDiv','replyBox','setReply','Reply Mode ', false, false, (chked) => {
+                this.replyAllBox.disabled = !chked;            
+                this.replyAllDiv.style.setProperty('color', chked && this.replyAllBox.checked ? '#fff' : '#ccc');
+            });
+
             createCheckbox('replyAllDiv','replyAllBox','setReplyAll',' - Send whole queue', true, true);
             createCheckbox('randomDiv','randomBox','setRandom','Random');
 
@@ -244,6 +261,7 @@ var bot = {
             // this.all.appendChild(this.importFile);
 
             this.panel.appendChild(this.hideBtn);
+            appendElWithText('title', ['bot--title'], 'BloonBot v'+bot.version, 'panel');
             this.panel.appendChild(this.all);
             
             body.insertBefore(this.panel, body.firstChild);
@@ -260,6 +278,18 @@ var bot = {
                     position: absolute;
                     width: 300px;
                     background: #0008;
+                }
+
+                #botPanel label {
+                    cursor: pointer;
+                }
+
+                .bot--title {
+                    display: inline-block;
+                    position: absolute;
+                    right: 10px;
+                    color: #888;
+                    font-weight: bold;
                 }
 
                 #bot--all-without-hide-btn {
@@ -316,10 +346,6 @@ var bot = {
 
                 .bot--switch {
                     padding: 10px;
-                }
-
-                .bot--hide-btn {
-
                 }
 
                 .bot--remove-queue {
