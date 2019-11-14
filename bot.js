@@ -584,7 +584,8 @@ var bot = {
 
         reset(){
             this.list.children[this.counter-1].classList.remove('bot--list-active-el');
-
+            this.list.children[0].classList.add('bot--list-active-el');
+         
             this.counter = 1;
             this.msgCounter = 1;
             this.msg = '';
