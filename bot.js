@@ -1,7 +1,7 @@
 bot ? bot.stop() : null;
 var bot = {
  
-    version: '1.3',
+    version: '1.3.1',
     botInterval: 0,
     rate: 500,
     isRunning: false,
@@ -461,7 +461,7 @@ var bot = {
                 this.input.value = msg;
             }
 
-            const handleQueue = (msg) => {
+            const insertFromQueue = (msg) => {
                 insertMsg(msg);
                 if(!this.isRandom) this.counter++;
 
@@ -485,7 +485,7 @@ var bot = {
                     } break;
 
                     case 'parrot+': {
-                        handleQueue(getStrangerMsg() + this.textArr[this.counter-1]);
+                        insertFromQueue(getStrangerMsg() + this.textArr[this.counter-1]);
                     } break; 
 
                     case 'increment': {
@@ -496,7 +496,7 @@ var bot = {
                     } break;
 
                     default: {
-                        handleQueue(this.textArr[this.counter-1]);
+                        insertFromQueue(this.textArr[this.counter-1]);
                     }
                 }
 
@@ -675,12 +675,11 @@ var bot = {
         },
 
         export(sep){
-            const data = this.textArr.join(sep)
-            this.download(data, this.textArr ? this.textArr : list+'.txt', 'text/plain');
+            const data = this.textArr.join(sep);
+            this.download(data, this.textArr ? this.textArr[0]+'.bot' : list+'.bot', 'text/plain');
         },
 
         import(sep, input){
-
             const isPlainText = (typeof input === 'string');
 
             const splitText = (text) => {
@@ -733,7 +732,7 @@ var bot = {
 
             if(this.text.isReplyMode){
                 try {
-                    if(this.log.lastChild.classList.contains('log-stranger') || (this.text.isReplyAll && this.text.counter > 1)){
+                    if(this.log.lastChild.classList.contains(this.strangerMsgClass) || (this.text.isReplyAll && this.text.counter > 1)){
                         this.text.insert();
                         this.sendMsg();
                     }
@@ -755,7 +754,6 @@ var bot = {
             clearInterval(this.botInterval);
             this.botInterval = 0;
             this.isRunning = false;
-            // this.text.reset();
         }
     },
 
@@ -804,11 +802,12 @@ var bot = {
         this.isAutoNext = !this.isAutoNext;
     },
  
-    init(inputQuery, btnQuery = 0, btnEscQuery = 0){
+    init(inputQuery, btnQuery = null, btnEscQuery = null, messageAreaQuery = null, strangerMsgClass = null){
         this.btn = btnQuery ? document.querySelector(btnQuery) : null;
         this.btnEsc = btnEscQuery ? document.querySelector(btnEscQuery) : null;
         this.inp = inputQuery ? document.querySelector(inputQuery) : null;
-        this.log = document.querySelector('#log-dynamic');
+        this.log = messageAreaQuery ? document.querySelector(messageAreaQuery) : null;
+        this.strangerMsgClass = strangerMsgClass;
  
         this.cp.init();
         this.text.init();
@@ -817,7 +816,7 @@ var bot = {
 }
  
 //6obcy
-bot.init('#box-interface-input', 'button.o-any.o-send', 'button.o-any.o-esc');
+bot.init('#box-interface-input', 'button.o-any.o-send', 'button.o-any.o-esc', '#log-dynamic', 'log-stranger');
 
 //e-chat.co
 // bot.init('#InputTextArea', '#SendButton', 'null');
