@@ -1,6 +1,7 @@
+bot ? bot.stop() : null;
 var bot = {
  
-    version: '1.2',
+    version: '1.3',
     botInterval: 0,
     rate: 500,
     isRunning: false,
@@ -33,6 +34,14 @@ var bot = {
             this.all = document.createElement('div');
             this.all.id = 'bot--all-without-hide-btn'
 
+            const addIdAndClasses = (el, id = null, classes = null) => {
+                if(id)
+                    el.id = controllerId;
+                
+                if(classes)
+                    el.classList.add(...classes);
+            }
+
             const createParentDivAndAppend = (el, childEl, parentEl = 'all', elType = 'div') => { //childEl must be an array
                 this[el] = document.createElement(elType);
 
@@ -62,7 +71,7 @@ var bot = {
             
             const createBtn = (btn, text, classes, clickFn, parentEl = 'all') => {
                 this[btn] = document.createElement('button');
-                this[btn].classList.add(...classes);
+                addIdAndClasses(this[btn], null, classes);
                 this[btn].appendChild(document.createTextNode(text))
                 this[btn].addEventListener('click', clickFn);
                 this[parentEl].appendChild(this[btn]);
@@ -141,7 +150,7 @@ var bot = {
             this.templates.classList.add('bot--templates');
             this.select = document.createElement('select');
 
-            const optionsArr = ['NONE','increment', 'waves', 'parrot', 'Bałkanica'];
+            const optionsArr = ['NONE','increment', 'waves', 'parrot', 'parrot+', 'Bałkanica'];
             for(let i=0; i<optionsArr.length; i++){
                 const opt = document.createElement('option');
 
@@ -191,7 +200,7 @@ var bot = {
                 bot.text.mutateTextArr(newTextArr);
             });
 
-            this.listForm = document.createElement('form');
+            createParentDivAndAppend('listForm', ['upperDiv','list'], 'all', 'form')
             this.listForm.addEventListener('submit', e => {
                 e.preventDefault();
                 const msg = this.addToList.value;
@@ -199,8 +208,6 @@ var bot = {
 
                 this.addToList.value = '';
             });
-            this.listForm.appendChild(this.upperDiv);
-            this.listForm.appendChild(this.list);
 
             setTimeout(() => {
                 Sortable.create(this.list, {
@@ -208,8 +215,6 @@ var bot = {
                     animation: 100
                 });
             }, 3000)
-            
-            this.all.appendChild(this.listForm);
 
             this.expImp = document.createElement('div');
             this.exportDiv = document.createElement('div');
@@ -245,20 +250,17 @@ var bot = {
 
             this.exportDiv.classList.add('bot--export-div');
             this.exportDiv.appendChild(this.expSeparation);
-            this.exportDiv.classList.add('bot--import-div');
+            this.importDiv.classList.add('bot--import-div');
             this.importDiv.appendChild(this.impSeparation);
             this.importDiv.appendChild(this.importFile);
 
-            // this.importForm = document.createElement('form');
             this.importInput = document.createElement('textarea');
             this.importInput.placeholder = 'Paste or type in some text to import';
-            // this.importForm.appendChild(this.importInput);
             this.importDiv.appendChild(this.importInput);
             
             this.expImp.appendChild(this.exportDiv);
             this.expImp.appendChild(this.importDiv);
             this.all.appendChild(this.expImp);
-            // this.all.appendChild(this.importFile);
 
             this.panel.appendChild(this.hideBtn);
             appendElWithText('title', ['bot--title'], 'BloonBot v'+bot.version, 'panel');
@@ -280,7 +282,7 @@ var bot = {
                     background: #0008;
                 }
 
-                #botPanel label {
+                #botPanel label *, #botPanel label {
                     cursor: pointer;
                 }
 
@@ -310,12 +312,26 @@ var bot = {
                     color: black;
                     border-top: 1px solid #777;
                     max-width: 100%;
-                    overflow: auto;
+                    overflow: hidden;
                     cursor: pointer;
+                    position: relative;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
                 }
 
                 .bot--list-active-el {
                     background: #fffc;
+                }
+
+                .bot--list-active-el::after {
+                    content: '';
+                    position: absolute;
+                    right: 0;
+                    top: 0;
+                    height: 100%;
+                    width: 25px;
+                    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' fill='%23f55' viewBox='0 0 640 640' shape-rendering='geometricPrecision' text-rendering='geometricPrecision' image-rendering='optimizeQuality' fill-rule='evenodd' clip-rule='evenodd'%3E%3Cpath d='M153.581 320L486.42 640.012V-.012L153.581 320z'/%3E%3C/svg%3E");
+                    background-position: left;
                 }
 
                 #bot--list-control input, .bot--queue-item {
@@ -436,52 +452,68 @@ var bot = {
         msg: '',
 
         insert(){
-            if(this.isRandom) this.counter = Math.floor(Math.random()*this.listLength)+1;
+            const getStrangerMsg = () => {
+                const strangerMsg = bot.log.lastChild.textContent;
+                return strangerMsg.replace(/Obcy:\s/, '');
+            }
 
-            switch(this.template){
-                case 'parrot': {
-                    const strangerMsg = bot.log.lastChild.textContent;
-                    const msg = strangerMsg.replace(/Obcy:\s/, '');
-                    this.input.value = msg;
-                } break;
+            const insertMsg = (msg) => {
+                this.input.value = msg;
+            }
 
-                case 'increment': {
-                    this.initialMsg = this.textArr[0];
-                    this.msg += this.initialMsg;
-                    this.input.value = this.msg;
-                    this.msgCounter++;
-                } break;
+            const handleQueue = (msg) => {
+                insertMsg(msg);
+                if(!this.isRandom) this.counter++;
 
-                default: {
-                    if(this.listLength === 1){
-                        if(!this.isRandom) this.counter = 1;
-                        this.input.value = this.textArr[0];
-
-                    } else if(this.listLength <= 0) {
-                        bot.stop();
-
-                    } else {
-                        this.input.value = this.textArr[this.counter-1];
-                        if(!this.isRandom) this.counter++;
-
-                        if(this.counter > this.listLength){
-                            if(!this.isRandom) this.counter = 1;
-                            if(!this.loop) bot.stop();
-                        }
-                    }
+                if(this.counter > this.listLength){
+                    if(!this.isRandom) this.counter = 1;
+                    if(!this.loop) bot.stop();
                 }
             }
 
-            if(this.isRandom){
-                this.counter = Math.floor(Math.random()*this.listLength)+1;
-                this.list.children[this.counter-1].classList.add('bot--list-active-el');
-                if(this.oldCounter !== this.counter) 
-                    this.list.children[this.oldCounter-1].classList.remove('bot--list-active-el');
-                this.oldCounter = this.counter;
-                
+            if(this.listLength === 0){
+                bot.stop();
+                alert('Empty queue!');
+
             } else {
-                this.list.children[this.counter-1].classList.add('bot--list-active-el');
-                this.list.children[this.counter === 1 ? this.listLength-1 : this.counter-2].classList.remove('bot--list-active-el');
+                if(this.isRandom && !this.afterRandomChecked)
+                    this.counter = Math.floor(Math.random()*this.listLength)+1;
+
+                switch(this.template){
+                    case 'parrot': {
+                        insertMsg(getStrangerMsg());
+                    } break;
+
+                    case 'parrot+': {
+                        handleQueue(getStrangerMsg() + this.textArr[this.counter-1]);
+                    } break; 
+
+                    case 'increment': {
+                        this.initialMsg = this.textArr[0];
+                        this.msg += this.initialMsg;
+                        insertMsg(this.msg);
+                        this.msgCounter++;
+                    } break;
+
+                    default: {
+                        handleQueue(this.textArr[this.counter-1]);
+                    }
+                }
+
+                if(this.isRandom){
+                    
+                    this.list.children[this.counter-1].classList.add('bot--list-active-el');
+                    if(this.oldCounter !== this.counter) 
+                        this.list.children[this.oldCounter-1].classList.remove('bot--list-active-el');
+
+                    this.oldCounter = this.counter;
+                    // this.counter = Math.floor(Math.random()*this.listLength)+1;
+                    this.afterRandomChecked = false;
+                } else {
+                    this.list.children[this.counter-1].classList.add('bot--list-active-el');
+                    if(this.listLength > 1)
+                        this.list.children[this.counter === 1 ? this.listLength-1 : this.counter-2].classList.remove('bot--list-active-el');
+                }
             }
         },
 
@@ -499,6 +531,13 @@ var bot = {
 
         setRandom(state){
             this.isRandom = state;
+
+            if(state){
+                this.list.children[this.counter-1].classList.remove('bot--list-active-el');
+                this.counter = Math.floor(Math.random()*this.listLength)+1;
+                this.list.children[this.counter-1].classList.add('bot--list-active-el');
+                this.afterRandomChecked = true;
+            }
         },
 
         queueTemplate(arr){
@@ -508,7 +547,8 @@ var bot = {
         },
 
         setTemplate(temp){
-            if(temp === 'waves') this.queueTemplate([ "🎈", "🎈🎈", "🎈🎈🎈", "🎈🎈🎈🎈", "🎈🎈🎈🎈🎈", "🎈🎈🎈🎈", "🎈🎈🎈", "🎈🎈", "🎈"]);
+            if(temp === 'waves') 
+                this.queueTemplate([ "🎈", "🎈🎈", "🎈🎈🎈", "🎈🎈🎈🎈", "🎈🎈🎈🎈🎈", "🎈🎈🎈🎈", "🎈🎈🎈", "🎈🎈", "🎈"]);
             else if(temp === 'Bałkanica'){
                 const text = `Bałkańska w żyłach płynie krew,
                 kobiety, wino, taniec, śpiew.
@@ -549,9 +589,11 @@ var bot = {
                 Znów przetańczymy razem całą noc.`;
 
                 this.queueTemplate(text.split('\n'));
-            } else if(temp === 'parrot'){
-                this.template = 'parrot';
-                bot.cp.replyBox.click();
+            } else if(temp === 'parrot' || temp === 'parrot+'){
+                this.template = temp;
+                const reply = bot.cp.replyBox;
+                if(!reply.checked)
+                    reply.click();
             } else if(temp !== 'NONE')
                 this.template = temp;
             else
@@ -587,13 +629,16 @@ var bot = {
         updateList(){
             this.list.innerHTML = '';
             this.textArr.map((item, id) => {
-                const msg = document.createTextNode(item);
-                const msgNode = document.createElement('div');
-                msgNode.dataset.id = id;
-                msgNode.appendChild(msg);
-                msgNode.classList.add('bot--queue-item');
-
-                this.list.appendChild(msgNode);
+                if(item && item !== ' ' && item !== '\n'){
+                    const msg = document.createTextNode(item);
+                    const msgNode = document.createElement('div');
+                    msgNode.dataset.id = id;
+                    msgNode.appendChild(msg);
+                    msgNode.classList.add('bot--queue-item');
+                    this.list.appendChild(msgNode);
+                } else {
+                    this.textArr.splice(id, 0);
+                }
             });
             this.listLength = this.textArr.length;
 
@@ -601,8 +646,10 @@ var bot = {
         },
 
         reset(){
-            this.list.children[this.counter-1].classList.remove('bot--list-active-el');
-            this.list.children[0].classList.add('bot--list-active-el');
+            if(this.listLength){
+                this.list.children[this.counter > this.listLength ? 0 : this.counter-1].classList.remove('bot--list-active-el');
+                this.list.children[0].classList.add('bot--list-active-el');
+            }
          
             this.counter = 1;
             this.msgCounter = 1;
