@@ -1,11 +1,13 @@
 bot ? bot.stop() : null;
 var bot = {
  
-    version: '1.3.1',
+    version: '1.4',
     botInterval: 0,
+    fakeTypeInterval: 0,
     rate: 500,
     isRunning: false,
     isAutoNext: false,
+    isFirstRun: true,
 
     cp: {
         btn: '',
@@ -133,6 +135,8 @@ var bot = {
 
             createCheckbox('replyAllDiv','replyAllBox','setReplyAll',' - Send whole queue', true, true);
             createCheckbox('randomDiv','randomBox','setRandom','Random');
+            createCheckbox('realTypeDiv','realTypeBox','setRealType','Real Type™');
+            createCheckbox('fakeTypeDiv','fakeTypeBox','setFakeType','Fake Typing');
 
             createRange('rate', 'bot--rate', 'rateText', 'Send once/<span id="bot--rate-gauge">'+bot.rate+'ms</span>', 'rateController', 'bot--rate-controller', 0, 10000, bot.rate, 1, 
             e => {
@@ -216,9 +220,22 @@ var bot = {
                 });
             }, 3000)
 
+            const imp = () => {
+                const sep = this.impSeparation.value;
+                const file = this.importFile.files;
+                const text = this.importInput.value;
+                const inp = text ? text : file;
+
+                bot.text.import(sep, inp);
+            }
+
             this.expImp = document.createElement('div');
             this.exportDiv = document.createElement('div');
-            this.importDiv = document.createElement('div');
+            this.importDiv = document.createElement('form');
+            this.importDiv.addEventListener('submit', e => {
+                e.preventDefault();
+                imp();
+            });
             this.expImp.classList.add('bot--expimp');
             createBtn('exportBtn', '< Export >', ['bot--btn', 'bot--export'],
             e => {
@@ -228,13 +245,7 @@ var bot = {
 
             createBtn('importBtn', '> Import <', ['bot--btn', 'bot--import'],
             e => {
-                const sep = this.impSeparation.value;
-                const file = this.importFile.files;
-                const text = this.importInput.value;
-
-                const inp = text ? text : file;
-                
-                bot.text.import(sep, inp);
+                imp();
             }, 'importDiv');
 
             this.expSeparation = document.createElement('input');
@@ -278,8 +289,9 @@ var bot = {
                     padding: 10px;
                     z-index: 1000;
                     position: absolute;
-                    width: 300px;
+                    width: 350px;
                     background: #0008;
+                    box-sizing: border-box;
                 }
 
                 #botPanel label *, #botPanel label {
@@ -321,6 +333,7 @@ var bot = {
 
                 .bot--list-active-el {
                     background: #fffc;
+                    border: 1px solid #f55;
                 }
 
                 .bot--list-active-el::after {
@@ -402,6 +415,7 @@ var bot = {
                 .bot--import {
                     background: #8f8;
                     color: black;
+                    margin-top: 10px;
                 }
 
                 .bot--export {
@@ -448,21 +462,23 @@ var bot = {
         isReplyMode: false,
         isReplyAll: true,
         isRandom: false,
+        isRealType: false,
+        isFakeType: false,
+        fakeTypeRate: 300,
+        initialRate: 500,
+        itemPause: 300,
         template: null,
         msg: '',
 
         insert(){
-            const getStrangerMsg = () => {
-                const strangerMsg = bot.log.lastChild.textContent;
-                return strangerMsg.replace(/Obcy:\s/, '');
-            }
-
-            const insertMsg = (msg) => {
-                this.input.value = msg;
-            }
-
             const insertFromQueue = (msg) => {
-                insertMsg(msg);
+                if(this.isRealType){
+                    const len = this.textArr[this.counter >= this.listLength ? 0 : this.counter].length;
+
+                    bot.changeRate(this.initialRate/10 * len + this.itemPause, true);
+                }
+
+                this.insertMsg(msg);
                 if(!this.isRandom) this.counter++;
 
                 if(this.counter > this.listLength){
@@ -481,17 +497,17 @@ var bot = {
 
                 switch(this.template){
                     case 'parrot': {
-                        insertMsg(getStrangerMsg());
+                        this.insertMsg(this.getStrangerMsg());
                     } break;
 
                     case 'parrot+': {
-                        insertFromQueue(getStrangerMsg() + this.textArr[this.counter-1]);
+                        insertFromQueue(this.getStrangerMsg() + this.textArr[this.counter-1]);
                     } break; 
 
                     case 'increment': {
                         this.initialMsg = this.textArr[0];
                         this.msg += this.initialMsg;
-                        insertMsg(this.msg);
+                        this.insertMsg(this.msg);
                         this.msgCounter++;
                     } break;
 
@@ -517,6 +533,15 @@ var bot = {
             }
         },
 
+        insertMsg(msg){
+            this.input.value = msg;
+        },
+
+        getStrangerMsg(){
+            const strangerMsg = bot.log.lastChild.textContent;
+            return strangerMsg.replace(/Obcy:\s/, '');
+        },
+
         setLoop(state){
             this.loop = state;
         },
@@ -538,6 +563,23 @@ var bot = {
                 this.list.children[this.counter-1].classList.add('bot--list-active-el');
                 this.afterRandomChecked = true;
             }
+        },
+
+        setRealType(state){
+            this.isRealType = state;
+
+            if(!state){
+                bot.changeRate(this.initialRate);
+            }
+        },
+
+        setFakeType(state){
+            this.isFakeType = state;
+
+            if(!state)
+                clearInterval(bot.fakeTypeInterval);
+
+            if(!bot.isRunning) bot.start();
         },
 
         queueTemplate(arr){
@@ -720,30 +762,41 @@ var bot = {
         init(){
             this.input = bot.inp;
             this.list = bot.cp.list;
+            this.initialRate = bot.rate;
         }
     },
 
     start(){
         this.stop();
 
-        this.cp.btn.style.setProperty('background','green')
+        this.cp.btn.style.setProperty('background','green');
 
         this.botInterval = setInterval( () => {
-
-            if(this.text.isReplyMode){
-                try {
-                    if(this.log.lastChild.classList.contains(this.strangerMsgClass) || (this.text.isReplyAll && this.text.counter > 1)){
-                        this.text.insert();
-                        this.sendMsg();
-                    }
-                } catch(err){}
-            } else {
-                this.text.insert();
-                this.sendMsg();
-            }
-            this.leaveIfDisconnected();
+            this.runSetup();
         
-        }, this.rate)
+        }, this.rate);
+
+        if(this.text.isFakeType){
+
+            let state = 1;
+
+            this.fakeTypeInterval = setInterval( () => {
+                state++;
+                if(state > 3) state = 1;
+                
+                let ftmsg = 'Faking typing.';
+                switch (state) {
+                    case 2:
+                        ftmsg += '.';
+                        break;
+                    case 3:
+                        ftmsg += '..';
+                        break;
+                }
+                this.text.insertMsg(ftmsg);
+            
+            }, this.text.fakeTypeRate);
+        }
  
         this.isRunning = true;
     },
@@ -752,9 +805,28 @@ var bot = {
         if(this.isRunning){
             this.cp.btn.style.setProperty('background','red')
             clearInterval(this.botInterval);
+            clearInterval(this.fakeTypeInterval);
             this.botInterval = 0;
+            this.fakeTypeInterval = 0;
             this.isRunning = false;
         }
+    },
+
+    runSetup(){
+        if(this.text.isReplyMode){
+            try {
+                if(this.log.lastChild.classList.contains(this.strangerMsgClass) || (this.text.isReplyAll && this.text.counter > 1)){
+                    this.text.insert();
+                    this.sendMsg();
+                }
+            } catch(err){}
+        } else {
+            this.text.insert();
+            this.sendMsg();
+        }
+        this.leaveIfDisconnected();
+
+        this.isFirstRun = false;
     },
 
     sendMsg(){
@@ -779,14 +851,20 @@ var bot = {
         if(this.isRunning){
             this.stop();
         } else {
+            this.runSetup();
             this.start();
+            this.isFirstRun = true;
         }
     },
 
-    changeRate(rate){
+    changeRate(rate, preserveOriginal){
         this.rate = rate;
-        const time = (this.rate<1000) ? (this.rate+'ms') : ((this.rate/1000).toFixed(1) + 's');
-        this.cp.rateGauge.textContent = time;
+        if(!preserveOriginal){
+            this.text.initialRate = rate;
+            const time = (this.rate<1000) ? (Math.floor(this.rate) +'ms') : ((this.rate/1000).toFixed(1) + 's');
+            this.cp.rateGauge.textContent = time;
+            //this.cp.rateController.value = time;
+        }
 
         if(this.isRunning)
             this.start();
