@@ -1,7 +1,7 @@
 bot ? bot.stop() : null;
 var bot = {
  
-    version: '1.4',
+    version: '1.4.1',
     botInterval: 0,
     fakeTypeInterval: 0,
     rate: 500,
@@ -33,6 +33,13 @@ var bot = {
             sortablejs.src = 'https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js';
             body.appendChild(sortablejs);
 
+            sortablejs.addEventListener('load',() => {
+                Sortable.create(this.list, {
+                    group: 'botQueue',
+                    animation: 100
+                });
+            })
+
             this.all = document.createElement('div');
             this.all.id = 'bot--all-without-hide-btn'
 
@@ -63,11 +70,11 @@ var bot = {
                     bot.text[setFunction](chked);
                     if(fn) fn(chked)
 
-                    this[parentEl].style.setProperty('color', chked ? '#fff' : '#ccc');
+                    // this[parentEl].style.setProperty('color', chked ? '#fff' : '#ccc');
                 });
 
                 createParentDivAndAppend(parentEl, [el], 'all', 'label');
-                this[parentEl].style.setProperty('color', checked ? '#fff' : '#ccc');
+                // this[parentEl].style.setProperty('color', checked ? '#fff' : '#ccc');
                 this[parentEl].appendChild(document.createTextNode(label));
             }
             
@@ -129,11 +136,10 @@ var bot = {
 
             createCheckbox('loopDiv','loopBox','setLoop','Loop ',true);
             createCheckbox('replyDiv','replyBox','setReply','Reply Mode ', false, false, (chked) => {
-                this.replyAllBox.disabled = !chked;            
-                this.replyAllDiv.style.setProperty('color', chked && this.replyAllBox.checked ? '#fff' : '#ccc');
+                this.replyAllDiv.classList.toggle('unactive');
             });
-
-            createCheckbox('replyAllDiv','replyAllBox','setReplyAll',' - Send whole queue', true, true);
+            createCheckbox('replyAllDiv','replyAllBox','setReplyAll','Send whole queue', false, true);
+            addIdAndClasses(this.replyAllDiv, null, ['bot--box-l2', 'unactive']);
             createCheckbox('randomDiv','randomBox','setRandom','Random');
             createCheckbox('realTypeDiv','realTypeBox','setRealType','Real Type™');
             createCheckbox('fakeTypeDiv','fakeTypeBox','setFakeType','Fake Typing');
@@ -154,7 +160,7 @@ var bot = {
             this.templates.classList.add('bot--templates');
             this.select = document.createElement('select');
 
-            const optionsArr = ['NONE','increment', 'waves', 'parrot', 'parrot+', 'Bałkanica'];
+            const optionsArr = ['NONE','increment', 'waves', 'parrot', 'parrot+ ( | )', 'Bałkanica'];
             for(let i=0; i<optionsArr.length; i++){
                 const opt = document.createElement('option');
 
@@ -212,13 +218,6 @@ var bot = {
 
                 this.addToList.value = '';
             });
-
-            setTimeout(() => {
-                Sortable.create(this.list, {
-                    group: 'botQueue',
-                    animation: 100
-                });
-            }, 3000)
 
             const imp = () => {
                 const sep = this.impSeparation.value;
@@ -432,6 +431,18 @@ var bot = {
                     width: 100%;
                     resize: none;
                 }
+
+                .bot--box-l2 {
+                    margin-left: 20px;
+                }
+
+                .bot--box-l3 {
+                    margin-left: 30px;
+                }
+
+                #botPanel label.unactive {
+                    color: #aaa;
+                }
             `;
 
             const style = document.createElement('style');
@@ -460,24 +471,18 @@ var bot = {
         msgCounter: 1,
         loop: true,
         isReplyMode: false,
-        isReplyAll: true,
+        isReplyAll: false,
         isRandom: false,
         isRealType: false,
         isFakeType: false,
         fakeTypeRate: 300,
         initialRate: 500,
-        itemPause: 300,
+        itemPause: 800,
         template: null,
         msg: '',
 
         insert(){
             const insertFromQueue = (msg) => {
-                if(this.isRealType){
-                    const len = this.textArr[this.counter >= this.listLength ? 0 : this.counter].length;
-
-                    bot.changeRate(this.initialRate/10 * len + this.itemPause, true);
-                }
-
                 this.insertMsg(msg);
                 if(!this.isRandom) this.counter++;
 
@@ -492,8 +497,9 @@ var bot = {
                 alert('Empty queue!');
 
             } else {
-                if(this.isRandom && !this.afterRandomChecked)
+                if(this.isRandom && !this.afterRandomChecked){
                     this.counter = Math.floor(Math.random()*this.listLength)+1;
+                }
 
                 switch(this.template){
                     case 'parrot': {
@@ -501,7 +507,11 @@ var bot = {
                     } break;
 
                     case 'parrot+': {
-                        insertFromQueue(this.getStrangerMsg() + this.textArr[this.counter-1]);
+                        const msgRaw = this.textArr[this.counter-1];
+                        const msgSplted = msgRaw.split('|', 2);
+                        const msg = msgSplted[0] + this.getStrangerMsg() + (msgSplted[1] ? msgSplted[1] : '');
+                        
+                        insertFromQueue(msg);
                     } break; 
 
                     case 'increment': {
@@ -516,20 +526,14 @@ var bot = {
                     }
                 }
 
-                if(this.isRandom){
-                    
-                    this.list.children[this.counter-1].classList.add('bot--list-active-el');
-                    if(this.oldCounter !== this.counter) 
-                        this.list.children[this.oldCounter-1].classList.remove('bot--list-active-el');
-
-                    this.oldCounter = this.counter;
-                    // this.counter = Math.floor(Math.random()*this.listLength)+1;
+                if(this.isRandom)
                     this.afterRandomChecked = false;
-                } else {
-                    this.list.children[this.counter-1].classList.add('bot--list-active-el');
-                    if(this.listLength > 1)
-                        this.list.children[this.counter === 1 ? this.listLength-1 : this.counter-2].classList.remove('bot--list-active-el');
-                }
+
+                this.list.children[this.counter-1].classList.add('bot--list-active-el');
+
+                if(this.oldCounter !== this.counter) 
+                    this.list.children[this.oldCounter-1].classList.remove('bot--list-active-el');
+                this.oldCounter = this.counter;
             }
         },
 
@@ -570,6 +574,8 @@ var bot = {
 
             if(!state){
                 bot.changeRate(this.initialRate);
+            } else {
+                bot.changeRate(1500);
             }
         },
 
@@ -579,7 +585,15 @@ var bot = {
             if(!state)
                 clearInterval(bot.fakeTypeInterval);
 
-            if(!bot.isRunning) bot.start();
+            if(bot.isRunning) bot.start();
+        },
+
+        realTypeSetup(){
+            if(this.isRealType){
+                const len = this.textArr[this.counter-1].length;
+                
+                bot.changeRate(this.initialRate/10 * len + this.itemPause, true);
+            }
         },
 
         queueTemplate(arr){
@@ -631,8 +645,8 @@ var bot = {
                 Znów przetańczymy razem całą noc.`;
 
                 this.queueTemplate(text.split('\n'));
-            } else if(temp === 'parrot' || temp === 'parrot+'){
-                this.template = temp;
+            } else if(temp === 'parrot' || temp === 'parrot+ ( | )'){
+                this.template = (temp === 'parrot') ? temp : 'parrot+';
                 const reply = bot.cp.replyBox;
                 if(!reply.checked)
                     reply.click();
@@ -771,6 +785,8 @@ var bot = {
 
         this.cp.btn.style.setProperty('background','green');
 
+        this.text.realTypeSetup();
+
         this.botInterval = setInterval( () => {
             this.runSetup();
         
@@ -827,6 +843,8 @@ var bot = {
         this.leaveIfDisconnected();
 
         this.isFirstRun = false;
+
+        if(this.text.isRealType) this.start();
     },
 
     sendMsg(){
