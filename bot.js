@@ -69,12 +69,9 @@ var bot = {
                     const chked = e.target.checked;
                     bot.text[setFunction](chked);
                     if(fn) fn(chked)
-
-                    // this[parentEl].style.setProperty('color', chked ? '#fff' : '#ccc');
                 });
 
                 createParentDivAndAppend(parentEl, [el], 'all', 'label');
-                // this[parentEl].style.setProperty('color', checked ? '#fff' : '#ccc');
                 this[parentEl].appendChild(document.createTextNode(label));
             }
             
@@ -155,6 +152,10 @@ var bot = {
             e => {
                 bot.toggleAutoNext();
             });
+            // ################################################################################################
+            createBtn('conditsSwitch', 'conditionals', ['bot--condits-switch', 'bot--btn'], e => {
+                bot.text.toggleCondits();
+            });
 
             this.templates = document.createElement('div');
             this.templates.classList.add('bot--templates');
@@ -170,10 +171,15 @@ var bot = {
             }
             this.templates.appendChild(document.createTextNode('Template '));
             this.templates.appendChild(this.select);
+            
             this.select.addEventListener('change', e => {
                 bot.text.setTemplate(e.target.value);
             });
-            this.all.appendChild(this.templates);
+            // appendElWithText('templatesLabel', ['bot--temp-label'], 'Template ', 'templates');
+            createParentDivAndAppend('containerTempCond', ['templates', 'conditsSwitch']);
+            addIdAndClasses(this.containerTempCond, null, ['bot--container']);
+            
+            // this.all.appendChild(this.templates);
 
             this.addToList = document.createElement('input');
             this.addToList.placeholder = 'Add to message queue';
@@ -317,6 +323,13 @@ var bot = {
                     overflow: auto;
                 }
 
+                .bot--container {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-top: 10px;
+                }
+
                 .bot--queue-item {
                     padding: 2px;
                     background: #fff9;
@@ -443,6 +456,10 @@ var bot = {
                 #botPanel label.unactive {
                     color: #aaa;
                 }
+
+                .bot--condits-switch {
+                    width: 30%;
+                }
             `;
 
             const style = document.createElement('style');
@@ -480,6 +497,7 @@ var bot = {
         itemPause: 800,
         template: null,
         msg: '',
+        isConditsShown: false,
 
         insert(){
             const insertFromQueue = (msg) => {
@@ -586,6 +604,12 @@ var bot = {
                 clearInterval(bot.fakeTypeInterval);
 
             if(bot.isRunning) bot.start();
+        },
+
+        toggleCondits(){
+            bot.cp.conditsSwitch.style.setProperty('background', this.isConditsShown ? 'red' : 'green');
+
+            this.isConditsShown = !this.isConditsShown;
         },
 
         realTypeSetup(){
@@ -849,7 +873,6 @@ var bot = {
 
     sendMsg(){
         // if(this.btn){
-        console.log(this.btn);
         this.btn.click();
         const confirmBtn = document.querySelector('.sd-interface button');
         confirmBtn ? confirmBtn.click() : null;
