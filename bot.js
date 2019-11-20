@@ -849,6 +849,7 @@ var bot = {
 
     sendMsg(){
         // if(this.btn){
+        console.log(this.btn);
         this.btn.click();
         const confirmBtn = document.querySelector('.sd-interface button');
         confirmBtn ? confirmBtn.click() : null;
