@@ -37,7 +37,7 @@ bot ? bot.stop() : null;
 
     var bot = {
 
-        version: '1.4.1',
+        version: '1.5',
         botInterval: null,
         fakeTypeInterval: null,
         condInterval: null,
@@ -209,7 +209,7 @@ bot ? bot.stop() : null;
                 this.templates.classList.add('bot--templates');
                 this.select = document.createElement('select');
 
-                const optionsArr = ['NONE', 'increment', 'waves', 'parrot', 'parrot+ ( | )', 'Bałkanica'];
+                const optionsArr = ['NONE', 'increment', 'waves', 'parrot', 'parrot+', 'Bałkanica'];
                 for (let i = 0; i < optionsArr.length; i++) {
                     const opt = document.createElement('option');
 
@@ -387,7 +387,7 @@ bot ? bot.stop() : null;
                 this.all.appendChild(this.expImp);
 
                 this.panel.appendChild(this.hideBtn);
-                appendElWithText('title', ['bot--title'], 'BloonBot v' + bot.version, 'panel');
+                appendElWithText('title', ['bot--title'], 'Bl🎈🎈nBot v' + bot.version, 'panel');
                 this.panel.appendChild(this.all);
 
                 body.insertBefore(this.panel, body.firstChild);
@@ -417,7 +417,7 @@ bot ? bot.stop() : null;
                         display: inline-block;
                         position: absolute;
                         right: 10px;
-                        color: #888;
+                        color: #fff8;
                         font-weight: bold;
                     }
 
@@ -712,7 +712,7 @@ bot ? bot.stop() : null;
 
                         case 'parrot+': {
                             const msgRaw = this.textArr[this.counter];
-                            const msgSplted = msgRaw.split('|', 2);
+                            const msgSplted = msgRaw.split('$msg', 2);
                             const msg = msgSplted[0] + this.getStrangerMsg() + (msgSplted[1] ? msgSplted[1] : '');
 
                             this.insertFromQueue(msg);
@@ -794,7 +794,7 @@ bot ? bot.stop() : null;
                 if (!state) {
                     bot.changeRate(this.initialRate);
                 } else {
-                    bot.changeRate(1500);
+                    bot.changeRate(1500, false, true);
                 }
             },
 
@@ -874,7 +874,7 @@ bot ? bot.stop() : null;
                     Znów przetańczymy razem całą noc.`;
 
                     this.queueTemplate(text.split('\n'));
-                } else if (temp === 'parrot' || temp === 'parrot+ ( | )') {
+                } else if (temp === 'parrot' || temp === 'parrot+') {
                     this.template = (temp === 'parrot') ? temp : 'parrot+';
                     const reply = bot.cp.replyBox;
                     if (!reply.checked)
