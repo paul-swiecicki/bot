@@ -455,7 +455,6 @@ bot ? bot.stop() : null;
 
                     .bot--list-active-el {
                         background: #fffc;
-                        border: 1px solid #f55;
                     }
 
                     .bot--list-active-el::after {
@@ -615,6 +614,7 @@ bot ? bot.stop() : null;
                         display: none;
                     }
                 `;
+                // active el - border: 1px solid #f55;
 
                 const style = document.createElement('style');
 
