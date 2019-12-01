@@ -37,7 +37,7 @@ bot ? bot.stop() : null;
 
     var bot = {
 
-        version: '1.5',
+        version: '2.0',
         botInterval: null,
         fakeTypeInterval: null,
         condInterval: null,
@@ -58,6 +58,7 @@ bot ? bot.stop() : null;
             listForm: '',
             addToList: '',
             isHidden: false,
+            position: 'left',
 
             init() {
                 const body = document.querySelector('body');
@@ -73,11 +74,47 @@ bot ? bot.stop() : null;
                 sortablejs.src = 'https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js';
                 body.appendChild(sortablejs);
 
+                const constructCond = (ifval, thenval) => {
+                    return msg = {
+                        ifs: [ifval],
+                        thens: [thenval]
+                    }
+                }
+
                 sortablejs.addEventListener('load', () => {
                     Sortable.create(this.list, {
                         group: 'botQueue',
-                        animation: 100
+                        animation: 100,
+                        onEnd: e => {
+                            const kids = this.list.children;
+                            const newTextArr = [];
+        
+                            for (let i = 0; i < kids.length; i++) {
+                                newTextArr.push(kids[i].textContent);
+                            }
+        
+                            bot.text.mutateTextArr(newTextArr);
+                        }
                     });
+
+                    Sortable.create(this.condList, {
+                        group: 'botConds',
+                        animation: 100,
+                        onEnd: e => {
+                            const kids = this.condList.children;
+                            const newTextArr = [];
+        
+                            for (let i = 0; i < kids.length; i++) {
+                                const ifContent = kids[i].children[0].textContent;
+                                const thenContent = kids[i].children[1].textContent;
+                                
+                                const cond = constructCond(ifContent, thenContent);
+                                newTextArr.push(cond);
+                            }
+        
+                            bot.text.mutateTextArr(newTextArr);
+                        }
+                    })
                 })
 
                 this.all = document.createElement('div');
@@ -109,6 +146,7 @@ bot ? bot.stop() : null;
 
                 const createBtn = (btn, text, classes, clickFn, parentEl = 'all') => {
                     this[btn] = document.createElement('button');
+                    // this[btn].type = 'button';
                     addIdAndClasses(this[btn], null, classes);
                     this[btn].appendChild(document.createTextNode(text));
                     this[btn].addEventListener('click', clickFn);
@@ -143,15 +181,14 @@ bot ? bot.stop() : null;
 
                 createBtn('hideBtn', 'HIDE', ['bot--btn', 'bot--hide-btn'],
                     e => {
-                        if (this.isHidden) {
-                            this.hideBtn.style.setProperty('background', 'red');
-                            this.all.style.setProperty('display', 'flex');
-                        } else {
-                            this.hideBtn.style.setProperty('background', 'green')
-                            this.all.style.setProperty('display', 'none');
-                        }
-                        this.isHidden = !this.isHidden;
+                        this.toggleHide();
                     });
+
+                // body.addEventListener("keydown", e => {
+                //     if (e.key === 'h') {
+                //         this.toggleHide();
+                //     }
+                // });
 
                 this.panel = document.createElement('div');
                 this.panel.id = 'botPanel';
@@ -163,11 +200,11 @@ bot ? bot.stop() : null;
                     e => {
                         bot.toggle();
                     }, 'onOffSwitches');
-                createBtn('queueBtn', 'Q', ['bot--btn', 'btn-on'],
+                createBtn('queueBtn', 'Queue', ['bot--btn', 'btn-on', 'onOffSpecific'],
                     e => {
                         bot.onOffSpecific('queue');
                     }, 'onOffSwitches');
-                createBtn('conditsBtn', 'C', ['bot--btn', 'btn-on'],
+                createBtn('conditsBtn', 'Condits', ['bot--btn', 'btn-on', 'onOffSpecific'],
                     e => {
                         bot.onOffSpecific('conds');
                     }, 'onOffSwitches');
@@ -197,45 +234,44 @@ bot ? bot.stop() : null;
                         bot.toggleAutoNext();
                     });
                 // ################################################################################################
-                createBtn('conditsSwitch', 'conditionals >', ['bot--condits-switch', 'bot--btn'], e => {
-                    this.conditsSwitch.textContent = bot.text.isConditsShown ? 'conditionals >' : '< queue';
-                    handleBtnClick(this.conditsSwitch, 'toggleCondits');
-                    
-                    this.listForm.classList.toggle('unactive-form');
-                    this.condForm.classList.toggle('unactive-form');
-                });
+                createBtn('conditsSwitch', 'conditionals >', ['bot--condits-switch', 'bot--btn'], this.handleConditsSwitch.bind(this));
 
-                this.templates = document.createElement('div');
-                this.templates.classList.add('bot--templates');
-                this.select = document.createElement('select');
+                const createSelect = (parentDiv, parentClasses, select, optionsArr, label, selectFn) => {
+                    this[parentDiv] = document.createElement('div');
+                    this[parentDiv].classList.add(...parentClasses);
+                    this[select] = document.createElement('select');
 
-                const optionsArr = ['NONE', 'increment', 'waves', 'parrot', 'parrot+', 'Bałkanica'];
-                for (let i = 0; i < optionsArr.length; i++) {
-                    const opt = document.createElement('option');
+                    for (let i = 0; i < optionsArr.length; i++) {
+                        const opt = document.createElement('option');
 
-                    opt.appendChild(document.createTextNode(optionsArr[i]));
-                    opt.value = optionsArr[i];
-                    this.select.appendChild(opt);
+                        opt.appendChild(document.createTextNode(optionsArr[i]));
+                        opt.value = optionsArr[i];
+                        this[select].appendChild(opt);
+                    }
+                    this[parentDiv].appendChild(document.createTextNode(label));
+                    this[parentDiv].appendChild(this[select]);
+
+                    this[select].addEventListener('change', selectFn);
                 }
-                this.templates.appendChild(document.createTextNode('Template '));
-                this.templates.appendChild(this.select);
-
-                this.select.addEventListener('change', e => {
-                    bot.text.setTemplate(e.target.value);
-                });
 
                 //##############################################################################################################################
 
-                createParentDivAndAppend('tempCondForm', ['templates', 'conditsSwitch']);
+                createParentDivAndAppend('tempCondForm', ['conditsSwitch']);
                 addIdAndClasses(this.tempCondForm, null, ['bot--container']);
 
                 this.condIfInput = document.createElement('input');
+                this.condIfInput.placeholder = 'can be RegEx (eg. /regex/)';
                 this.condIfInput.required = true;
                 this.condIfLabel = document.createTextNode('IF: ');
                 this.condThenInput = document.createElement('input');
                 this.condThenInput.required = true;
                 this.condThenLabel = document.createTextNode('THEN: ');
 
+                createSelect('condTemplates', ['bot--cond-templates'], 'selectCondTemplate', ['NONE', 'fake k/m17'], 'Template ', e => {
+                    bot.text.setTemplate(e.target.value);
+                });
+                createParentDivAndAppend('condTemplatesDiv', ['condTemplates']);
+                this.condTemplatesDiv.classList.add('templates-modes-div');
                 createParentDivAndAppend('condIfDiv', ['condIfLabel', 'condIfInput']);
                 createParentDivAndAppend('condThenDiv', ['condThenLabel', 'condThenInput']);
 
@@ -258,30 +294,16 @@ bot ? bot.stop() : null;
                     bot.text.removeMessage(e.target.closest('.bot--queue-item').dataset.id);
                     // console.log(e.target.closest('.bot--queue-item').dataset.id);
                 });
-                this.condList.addEventListener('drop', e => {
-                    const kids = this.condList.children;
-                    const newTextArr = [];
 
-                    for (let i = 0; i < kids.length; i++) {
-                        newTextArr.push(kids[i].textContent);
-                    }
-
-                    bot.text.mutateTextArr(newTextArr, 'cond');
-                });
-
-                createParentDivAndAppend('condForm', ['condControl', 'condList'], 'all', 'form');
+                createParentDivAndAppend('condForm', ['condTemplatesDiv', 'condControl', 'condList'], 'all', 'form');
                 this.condForm.classList.add('cond-form', 'unactive-form');
                 
                 this.condForm.addEventListener('submit', e => {
                     e.preventDefault();
                     const ifval = this.condIfInput.value;
                     const thenval = this.condThenInput.value;
-                    const msg = {
-                        ifs: [ifval],
-                        thens: [thenval]
-                    }
                     
-                    bot.text.addMessage(msg);
+                    bot.text.addMessage(constructCond(ifval, thenval));
 
                     this.condIfInput.value = this.condThenInput.value = '';
                 });
@@ -312,18 +334,18 @@ bot ? bot.stop() : null;
                 this.list.addEventListener('click', e => {
                     bot.text.removeMessage(e.target.dataset.id);
                 });
-                this.list.addEventListener('drop', e => {
-                    const kids = this.list.children;
-                    const newTextArr = [];
 
-                    for (let i = 0; i < kids.length; i++) {
-                        newTextArr.push(kids[i].textContent);
-                    }
-
-                    bot.text.mutateTextArr(newTextArr);
+                createSelect('modes', ['bot--modes'], 'selectMode', ['NONE', 'increment', 'parrot', 'parrot+'], 'Mode ', e => {
+                    bot.text.setMode(e.target.value);
+                });
+                createSelect('templates', ['bot--templates'], 'select', ['NONE', 'waves', 'Bałkanica'], 'Template ', e => {
+                    bot.text.setTemplate(e.target.value);
                 });
 
-                createParentDivAndAppend('listForm', ['upperDiv', 'list'], 'all', 'form')
+                createParentDivAndAppend('templatesModesDiv', ['modes', 'templates']);
+                this.templatesModesDiv.classList.add('templates-modes-div');
+
+                createParentDivAndAppend('listForm', ['templatesModesDiv', 'upperDiv', 'list'], 'all', 'form')
                 this.listForm.addEventListener('submit', e => {
                     e.preventDefault();
                     
@@ -352,18 +374,18 @@ bot ? bot.stop() : null;
                 this.expImp.classList.add('bot--expimp');
                 createBtn('exportBtn', '< Export >', ['bot--btn', 'bot--export'],
                     e => {
-                        const sep = this.expSeparation.value;
-                        bot.text.export(sep);
+                        const name = this.expName.value;
+                        bot.text.export(name);
                     }, 'exportDiv');
 
                 createBtn('importBtn', '> Import <', ['bot--btn', 'bot--import'],
                     e => {
-                        imp();
+                        // imp();
                     }, 'importDiv');
 
-                // this.expSeparation = document.createElement('input');
-                // this.expSeparation.placeholder = 'sep.';
-                // this.expSeparation.id = 'bot--expSep';
+                this.expName = document.createElement('input');
+                this.expName.placeholder = 'file name';
+                this.expName.id = 'bot--expName';
 
                 this.impSeparation = document.createElement('input');
                 this.impSeparation.placeholder = 'sep.';
@@ -373,7 +395,7 @@ bot ? bot.stop() : null;
                 this.importFile.type = 'file';
 
                 this.exportDiv.classList.add('bot--export-div');
-                // this.exportDiv.appendChild(this.expSeparation);
+                this.exportDiv.appendChild(this.expName);
                 this.importDiv.classList.add('bot--import-div');
                 this.importDiv.appendChild(this.impSeparation);
                 this.importDiv.appendChild(this.importFile);
@@ -387,6 +409,11 @@ bot ? bot.stop() : null;
                 this.all.appendChild(this.expImp);
 
                 this.panel.appendChild(this.hideBtn);
+                createBtn('sideSwitch', '<|>', ['sideSwitch', 'bot--btn'], e => {
+                    this.panel.style.setProperty('right', this.position === 'right' ? 'initial' : 0);
+
+                    this.position = (this.position === 'right' ? 'left' : 'right');
+                }, 'panel')
                 appendElWithText('title', ['bot--title'], 'Bl🎈🎈nBot v' + bot.version, 'panel');
                 this.panel.appendChild(this.all);
 
@@ -395,7 +422,24 @@ bot ? bot.stop() : null;
                 this.stylize();
             },
 
+            handleConditsSwitch(e){
+                this.conditsSwitch.textContent = bot.text.isConditsShown ? 'conditionals >' : '< queue';
+                handleBtnClick(this.conditsSwitch, 'toggleCondits');
+                
+                this.listForm.classList.toggle('unactive-form');
+                this.condForm.classList.toggle('unactive-form');
+            },
 
+            toggleHide(){
+                if (this.isHidden) {
+                    this.hideBtn.style.setProperty('background', 'red');
+                    this.all.style.setProperty('display', 'flex');
+                } else {
+                    this.hideBtn.style.setProperty('background', 'green')
+                    this.all.style.setProperty('display', 'none');
+                }
+                this.isHidden = !this.isHidden;
+            },
 
             stylize() {
                 const css = `
@@ -404,9 +448,13 @@ bot ? bot.stop() : null;
                         padding: 10px;
                         z-index: 1000;
                         position: absolute;
-                        width: 350px;
+                        width: 450px;
                         background: #0008;
                         box-sizing: border-box;
+                    }
+
+                    .sideSwitch {
+                        margin-left: 10px;
                     }
 
                     #botPanel label *, #botPanel label {
@@ -429,7 +477,7 @@ bot ? bot.stop() : null;
                     }
 
                     .bot--list {
-                        max-height: 250px;
+                        max-height: 20vh;
                         overflow: auto;
                     }
 
@@ -505,7 +553,7 @@ bot ? bot.stop() : null;
 
                     .bot--switch {
                         padding: 10px;
-                        flex: 4 0 200px;
+                        flex: 3 0 200px;
                     }
 
                     .bot--remove-queue {
@@ -550,9 +598,13 @@ bot ? bot.stop() : null;
                         color: #800;
                     }
 
-                    #bot--impSep, #bot--expSep {
+                    #bot--impSep {
                         width: 25px;
                         height: 15px;
+                    }
+
+                    #bot--expName {
+                        width: 60px;
                     }
 
                     textarea {
@@ -590,7 +642,7 @@ bot ? bot.stop() : null;
                     }
                     
                     .cond-form input {
-                        width: 90%;
+                        width: 100%;
                     }
 
                     .bot--cond-item {
@@ -612,6 +664,12 @@ bot ? bot.stop() : null;
 
                     .necessary_submit {
                         display: none;
+                    }
+
+                    .templates-modes-div {
+                        margin-top: 10px;
+                        display: flex;
+                        justify-content: space-between;
                     }
                 `;
                 // active el - border: 1px solid #f55;
@@ -653,9 +711,10 @@ bot ? bot.stop() : null;
             fakeTypeRate: 300,
             initialRate: 500,
             itemPause: 800,
-            template: null,
+            mode: null,
             msg: '',
             isConditsShown: false,
+            counters: ['counter', 'oldCounter'],
 
             checkCond(){
                 const strangerMsg = this.getStrangerMsg();
@@ -690,21 +749,24 @@ bot ? bot.stop() : null;
                 }
             },
 
-            escapeReg(str){
-                return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
+            checkCounters(){
+                for(const counterStr of this.counters){
+                    this[counterStr] = (this[counterStr]+1 > this.listLength) ? 0 : this[counterStr];
+                }
             },
 
             insert() {
                 if (this.listLength === 0) {
                     bot.stop();
                     alert('Empty queue!');
-
                 } else {
+                    this.checkCounters()
+
                     if (this.isRandom && !this.afterRandomChecked) {
                         this.counter = Math.floor(Math.random() * this.listLength);
                     }
 
-                    switch (this.template) {
+                    switch (this.mode) {
                         case 'parrot': {
                             this.insertMsg(this.getStrangerMsg());
                         }
@@ -734,13 +796,17 @@ bot ? bot.stop() : null;
 
                     if (this.isRandom)
                         this.afterRandomChecked = false;
-                    
-                    this.list.children[this.counter].classList.add('bot--list-active-el');
-
-                    if (this.oldCounter !== this.counter)
-                        this.list.children[this.oldCounter].classList.remove('bot--list-active-el');
-                    this.oldCounter = this.counter;
+                
+                    this.setActiveListEl();
                 }
+            },
+
+            setActiveListEl(){
+                this.list.children[this.counter].classList.add('bot--list-active-el');
+
+                if (this.oldCounter !== this.counter)
+                    this.list.children[this.oldCounter].classList.remove('bot--list-active-el');
+                this.oldCounter = this.counter;
             },
 
             insertFromQueue(msg){
@@ -758,7 +824,7 @@ bot ? bot.stop() : null;
             },
 
             getStrangerMsg() {
-                if(bot.log.lastChild){
+                if(bot.isLastMsgStrangers()){
                     const strangerMsg = bot.log.lastChild.textContent;
                     return strangerMsg.replace(/Obcy:\s/, '');
                 } else
@@ -825,70 +891,66 @@ bot ? bot.stop() : null;
                 }
             },
 
-            queueTemplate(arr) {
-                this.mutateTextArr(arr);
-                this.template = null;
+            setTemplate(temp) {
+                if(confirm('This will clear the list of messages. Proceed?')){
+                    let arr = '';
+
+                    if(!this.isConditsShown){
+                        switch (temp) {
+                            case 'waves':
+                                arr = ["🎈", "🎈🎈", "🎈🎈🎈", "🎈🎈🎈🎈", "🎈🎈🎈🎈🎈", "🎈🎈🎈🎈", "🎈🎈🎈", "🎈🎈", "🎈"]
+                                break;
+                            case 'Bałkanica':
+                                const text = 'Bałkańska w żyłach płynie krew,| kobiety, wino, taniec, śpiew.| Zasady proste w życiu mam,| nie rób drugiemu tego-| czego ty nie chcesz sam!| Muzyka, przyjaźń, radość, śmiech.| Życie łatwiejsze staje się.| Przynieście dla mnie wina dzban,| potem ruszamy razem w tan.| Będzie! Będzie zabawa!| Będzie się działo!| I znowu nocy będzie mało.| Będzie głośno, będzie radośnie| Znów przetańczymy razem całą noc.| Będzie! Będzie zabawa!| Będzie się działo!| I znowu nocy będzie mało.| Będzie głośno, będzie radośnie| Znów przetańczymy razem całą noc.| Orkiestra nie oszczędza sił| już trochę im brakuje tchu.| Polejcie wina również im| znów na parkiecie będzie dym.| Bałkańskie rytmy, Polska moc!| Znów przetańczymy całą noc.| I jeszcze jeden malutki wina dzban| i znów ruszymy razem w tan!| Będzie! Będzie zabawa!| Będzie się działo!| I znowu nocy będzie mało.| Będzie głośno, będzie radośnie| Znów przetańczymy razem całą noc.| Będzie! Będzie zabawa!| Będzie się działo!| I znowu nocy będzie mało.| Będzie głośno, będzie radośnie| Znów przetańczymy razem całą noc.|';
+                                arr = text.split('|');
+                                break;
+                            default:
+                                break;
+                        }
+                    } else {
+                        switch (temp) {
+                            case 'fake k/m17':
+                                arr = [{
+                                    "ifs": ["m"],
+                                    "thens": ["k"]
+                                }, {
+                                    "ifs": ["k"],
+                                    "thens": ["m"]
+                                }, {
+                                    "ifs": ["/.*lat.*/"],
+                                    "thens": ["17"]
+                                }, {
+                                    "ifs": ["/.*m[\\d].*/"],
+                                    "thens": ["k17"]
+                                }, {
+                                    "ifs": ["/.*k[\\d].*/"],
+                                    "thens": ["m17"]
+                                }]
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                    this.mutateTextArr(arr);
+                }
                 bot.cp.select.value = 'NONE';
             },
 
-            setTemplate(temp) {
-                if (temp === 'waves')
-                    this.queueTemplate(["🎈", "🎈🎈", "🎈🎈🎈", "🎈🎈🎈🎈", "🎈🎈🎈🎈🎈", "🎈🎈🎈🎈", "🎈🎈🎈", "🎈🎈", "🎈"]);
-                else if (temp === 'Bałkanica') {
-                    const text = `Bałkańska w żyłach płynie krew,
-                    kobiety, wino, taniec, śpiew.
-                    Zasady proste w życiu mam,
-                    nie rób drugiemu tego-
-                    czego ty nie chcesz sam!
-                    Muzyka, przyjaźń, radość, śmiech.
-                    Życie łatwiejsze staje się.
-                    Przynieście dla mnie wina dzban,
-                    potem ruszamy razem w tan.
-                    Będzie! Będzie zabawa!
-                    Będzie się działo!
-                    I znowu nocy będzie mało.
-                    Będzie głośno, będzie radośnie
-                    Znów przetańczymy razem całą noc.
-                    Będzie! Będzie zabawa!
-                    Będzie się działo!
-                    I znowu nocy będzie mało.
-                    Będzie głośno, będzie radośnie
-                    Znów przetańczymy razem całą noc.
-                    Orkiestra nie oszczędza sił
-                    już trochę im brakuje tchu.
-                    Polejcie wina również im
-                    znów na parkiecie będzie dym.
-                    Bałkańskie rytmy, Polska moc!
-                    Znów przetańczymy całą noc.
-                    I jeszcze jeden malutki wina dzban
-                    i znów ruszymy razem w tan!
-                    Będzie! Będzie zabawa!
-                    Będzie się działo!
-                    I znowu nocy będzie mało.
-                    Będzie głośno, będzie radośnie
-                    Znów przetańczymy razem całą noc.
-                    Będzie! Będzie zabawa!
-                    Będzie się działo!
-                    I znowu nocy będzie mało.
-                    Będzie głośno, będzie radośnie
-                    Znów przetańczymy razem całą noc.`;
-
-                    this.queueTemplate(text.split('\n'));
-                } else if (temp === 'parrot' || temp === 'parrot+') {
-                    this.template = (temp === 'parrot') ? temp : 'parrot+';
+            setMode(mode) {
+                if (mode === 'parrot' || mode === 'parrot+') {
+                    this.mode = (mode === 'parrot') ? mode : 'parrot+';
                     const reply = bot.cp.replyBox;
                     if (!reply.checked)
                         reply.click();
-                } else if (temp !== 'NONE')
-                    this.template = temp;
+                } else if (mode !== 'NONE')
+                    this.mode = mode;
                 else
-                    this.template = null;
+                    this.mode = null;
 
                 this.reset();
             },
 
             mutateTextArr(newArr, forceMode = false) {
-                // console.log(this[this.presentArr]);
                 if(!forceMode){
                     this[this.presentArr] = newArr;
                 } else {
@@ -913,18 +975,25 @@ bot ? bot.stop() : null;
             },
 
             removeMessage(id) {
+                id = parseInt(id);
+
                 this[this.presentArr].splice(id, 1);
+                if(!this.isConditsShown){
+                    if((this.counter !== 0) && (id !== this.counter) && (id < this.counter))
+                        this.counter -= 1;
+                    else if(id === this.counter)
+                        this.reset();
+                }
                 this.updateList();
             },
 
             removeQueue() {
-                this.mutateTextArr(!this.isConditsShown ? ['🎈'] : this.initCondArr);
+                if(confirm('This will clear list of messages. Proceed?'))
+                    this.mutateTextArr(!this.isConditsShown ? ['🎈'] : this.initCondArr);
             },
 
             updateList() {
                 if(!this.isConditsShown){
-                    // this.textArr = this[this.presentArr];
-
                     this.list.innerHTML = '';
                     const frag = document.createDocumentFragment();
 
@@ -944,6 +1013,8 @@ bot ? bot.stop() : null;
                     });
 
                     this.listLength = this.textArr.length;
+                    this.checkCounters()
+                    this.setActiveListEl();
                 } else {
                     this.condList.innerHTML = '';
                     const frag = document.createDocumentFragment();
@@ -970,23 +1041,22 @@ bot ? bot.stop() : null;
 
                     this.condListLength = this.condArr.length;
                 }
-                
-                this.reset();
             },
 
             reset() {
                 if(!this.isConditsShown){
+                    // this.setActiveListEl();
                     if (this.listLength) {
+                        this.checkCounters();
                         this.list.children[this.counter+1 > this.listLength ? 0 : this.counter].classList.remove('bot--list-active-el');
                         this.list.children[0].classList.add('bot--list-active-el');
                     }
-
                     this.counter = this.oldCounter = this.msgCounter = 0;
                     this.msg = '';
                 }
             },
 
-            export () {
+            export(fileName) {
                 const data = {
                     settings: {
                         boxes: {
@@ -1002,14 +1072,14 @@ bot ? bot.stop() : null;
                             conds: bot.isCondsRunning
                         },
                         rate: bot.rate,
-                        template: this.template
+                        mode: this.mode
                     },
                       
                     textArr: this.textArr,
                     condArr: this.condArr
                 }
 
-                download(JSON.stringify(data), (this.textArr ? this.textArr[0] : list) + '.json', 'text/plain');
+                download(JSON.stringify(data), (fileName ? fileName : this.textArr[0]) + '.json', 'text/plain');
             },
 
             import(sep, input) {
@@ -1026,17 +1096,23 @@ bot ? bot.stop() : null;
                 if (!isPlainText) {
                     const processFile = (e) => {
                         const text = e.target.result;
-                        const obj = JSON.parse(text);
+                        const data = JSON.parse(text);
 
-                        const initConditsState = this.isConditsShown;
+                        const initConditsState = !this.isConditsShown;
                         this.toggleCondits(true);
-                        this.mutateTextArr(obj.textArr);
+                        this.mutateTextArr(data.textArr);
                         this.toggleCondits(false);
-                        this.mutateTextArr(obj.condArr);
+                        this.mutateTextArr(data.condArr);
                         this.toggleCondits(initConditsState);
+                        
+                        if(!data.settings.switches.queue && data.settings.switches.conds){
+                            if(!this.isConditsShown){
+                                // bot.cp.handleConditsSwitch();
+                            }
+                        }
 
-                        const keys = Object.keys(obj.settings.boxes);
-                        const vals = Object.values(obj.settings.boxes);
+                        const keys = Object.keys(data.settings.boxes);
+                        const vals = Object.values(data.settings.boxes);
                         const cp = bot.cp;
                         
                         for(let i=0; i<keys.length; i++){
@@ -1051,10 +1127,10 @@ bot ? bot.stop() : null;
                             }
                         }
 
-                        bot.changeRate(obj.settings.rate, false, true);
-                        this.setTemplate(obj.settings.template);
+                        bot.changeRate(data.settings.rate, false, true);
+                        this.setMode(data.settings.mode);
 
-                        const switches = obj.settings.switches;
+                        const switches = data.settings.switches;
                         bot.onOffSpecific('queue', switches.queue);
                         bot.onOffSpecific('conds', switches.conds);
                     }
@@ -1103,17 +1179,17 @@ bot ? bot.stop() : null;
 
             this.text.realTypeSetup();
 
-            if(this.isCondsRunning){
-                this.condInterval = setInterval(() => {
-                    this.text.checkCond();
-                }, this.condRate);
-            }
+            // if(this.isCondsRunning){
+            //     this.condInterval = setInterval(() => {
+            //         this.text.checkCond();
+            //     }, this.condRate);
+            // }
+            
+            this.botInterval = setInterval(() => {
+                this.runSetup();
+            }, this.rate);
 
             if(this.isQueueRunning){
-                this.botInterval = setInterval(() => {
-                    this.runSetup();
-                }, this.rate);
-
                 if (this.text.isFakeType) {
                     let state = 1;
                     this.fakeTypeInterval = setInterval(() => {
@@ -1143,18 +1219,30 @@ bot ? bot.stop() : null;
                 this.cp.btn.style.setProperty('background', 'red')
                 clearInterval(this.botInterval);
                 clearInterval(this.fakeTypeInterval);
-                clearInterval(this.condInterval);
+                // clearInterval(this.condInterval);
                 this.botInterval = 0;
                 this.fakeTypeInterval = 0;
                 this.isRunning = false;
             }
         },
 
+        isLastMsgStrangers(){
+            const lastMsg = this.log.lastChild;
+
+            if(lastMsg){
+                return lastMsg.classList.contains(this.strangerMsgClass);
+            } else return false;
+        },
+
         runSetup() {
+            if(this.isCondsRunning){
+                this.text.checkCond();
+            }
+
             if(this.isQueueRunning){
                 if (this.text.isReply) {
                     try {
-                        if (this.log.lastChild.classList.contains(this.strangerMsgClass) || (this.text.isReplyAll && this.text.counter > 0)) {
+                        if (this.isLastMsgStrangers() || (this.text.isReplyAll && this.text.counter > 0)) {
                             this.text.insert();
                             this.sendMsg();
                         }
@@ -1224,10 +1312,24 @@ bot ? bot.stop() : null;
         onOffSpecific(mode = 'queue', force = null){
             const btn = mode === 'queue' ? 'queueBtn' : 'conditsBtn';
             const running = mode === 'queue' ? 'isQueueRunning' : 'isCondsRunning';
+            const otherRunning = mode !== 'queue' ? 'isQueueRunning' : 'isCondsRunning';
+
             if(force !== this[running]){
                 this.cp[btn].classList.toggle('btn-on');
                 this[running] = !this[running];
                 if(this.isRunning) this.start();
+            }
+
+            if(this[otherRunning] !== this[running]){ // if one of switches is ON and if list shown is in state diffrent than this one running then switch them
+                if(mode === 'queue'){
+                    if(this[running] === this.text.isConditsShown){
+                        this.cp.handleConditsSwitch();
+                    }
+                } else {
+                    if(this[running] === !this.text.isConditsShown){
+                        this.cp.handleConditsSwitch();
+                    }
+                }
             }
         },
 
