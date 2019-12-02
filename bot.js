@@ -925,6 +925,12 @@ bot ? bot.stop() : null;
                                 }, {
                                     "ifs": ["/.*k[\\d].*/"],
                                     "thens": ["m17"]
+                                }, {
+                                    "ifs": ["hej"],
+                                    "thens": ["hej k"]
+                                }, {
+                                    "ifs": ["/^km.*/"],
+                                    "thens": ["k"]
                                 }]
                                 break;
                             default:
