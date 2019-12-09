@@ -775,8 +775,13 @@ bot ? bot.stop() : null;
                         case 'parrot+': {
                             const msgRaw = this.textArr[this.counter];
                             const msgSplted = msgRaw.split('$msg', 2);
-                            const msg = msgSplted[0] + this.getStrangerMsg() + (msgSplted[1] ? msgSplted[1] : '');
 
+                            let msg = '';
+                            if(msgSplted.length > 1){
+                                msg = msgSplted[0] + this.getStrangerMsg() + (msgSplted[1] ? msgSplted[1] : '');
+                            } else {
+                                msg = msgSplted[0];
+                            }
                             this.insertFromQueue(msg);
                         }
                         break;
@@ -960,10 +965,10 @@ bot ? bot.stop() : null;
                 if(!forceMode){
                     this[this.presentArr] = newArr;
                 } else {
-                    this[forceMode+'Arr'] = newArr;
+                    this[forceMode === 'queue' ? 'textArr' : 'condArr'] = newArr;
                 }
 
-                this.updateList();
+                this.updateList(forceMode);
             },
 
             addMessage(msg) {
@@ -998,8 +1003,8 @@ bot ? bot.stop() : null;
                     this.mutateTextArr(!this.isConditsShown ? ['🎈'] : this.initCondArr);
             },
 
-            updateList() {
-                if(!this.isConditsShown){
+            updateList(forceMode = false) {
+                if(forceMode ? forceMode === 'queue' : !this.isConditsShown){
                     this.list.innerHTML = '';
                     const frag = document.createDocumentFragment();
 
@@ -1104,18 +1109,18 @@ bot ? bot.stop() : null;
                         const text = e.target.result;
                         const data = JSON.parse(text);
 
-                        const initConditsState = !this.isConditsShown;
-                        this.toggleCondits(true);
-                        this.mutateTextArr(data.textArr);
-                        this.toggleCondits(false);
-                        this.mutateTextArr(data.condArr);
-                        this.toggleCondits(initConditsState);
+                        // const initConditsState = !this.isConditsShown;
+                        // this.toggleCondits(true);
+                        this.mutateTextArr(data.textArr, 'queue');
+                        // this.toggleCondits(false);
+                        this.mutateTextArr(data.condArr, 'conds');
+                        // this.toggleCondits(initConditsState);
                         
-                        if(!data.settings.switches.queue && data.settings.switches.conds){
-                            if(!this.isConditsShown){
-                                // bot.cp.handleConditsSwitch();
-                            }
-                        }
+                        // if(!data.settings.switches.queue && data.settings.switches.conds){
+                        //     if(!this.isConditsShown){
+                        //         // bot.cp.handleConditsSwitch();
+                        //     }
+                        // }
 
                         const keys = Object.keys(data.settings.boxes);
                         const vals = Object.values(data.settings.boxes);
@@ -1326,17 +1331,17 @@ bot ? bot.stop() : null;
                 if(this.isRunning) this.start();
             }
 
-            if(this[otherRunning] !== this[running]){ // if one of switches is ON and if list shown is in state diffrent than this one running then switch them
-                if(mode === 'queue'){
-                    if(this[running] === this.text.isConditsShown){
-                        this.cp.handleConditsSwitch();
-                    }
-                } else {
-                    if(this[running] === !this.text.isConditsShown){
-                        this.cp.handleConditsSwitch();
-                    }
-                }
-            }
+            // if(this[otherRunning] !== this[running]){ // if one of switches is ON and if list shown is in state diffrent than this one running then switch them
+            //     if(mode === 'queue'){
+            //         if(this[running] === this.text.isConditsShown){
+            //             this.cp.handleConditsSwitch();
+            //         }
+            //     } else {
+            //         if(this[running] === !this.text.isConditsShown){
+            //             this.cp.handleConditsSwitch();
+            //         }
+            //     }
+            // }
         },
 
         init(inputQuery, btnQuery = null, btnEscQuery = null, messageAreaQuery = null, strangerMsgClass = null) {
