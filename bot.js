@@ -331,26 +331,53 @@ bot ? bot.stop() : null;
 
                 this.list = document.createElement('div');
                 this.list.classList.add('bot--list');
+
+                let editingListItemId = null;
+                body.addEventListener('mousedown', e => {
+                    // console.log(editingListItemId);
+                    
+                    // document.querySelector('.bot--queue-item input')
+                    //! brak parenta prawdopodbnie powiazany z klonowaniem wezla
+                    
+
+                    if(!e.target.classList.contains('editInput')) {
+                        if (!e.target.closest('.editBtn')){
+                            bot.text.updateListItem(editingListItemId);
+                            editingListItemId = null;
+                            // bot.text.updateList();
+                        }
+                        if(editingListItemId){
+                            bot.text.updateListItem(editingListItemId);
+                            editingListItemId = null;
+                        }
+                    }
+                })
+
                 this.list.addEventListener('click', e => {
                     if(e.target.closest('.editBtn')){
-                        const item = e.target.closest('.bot--queue-item');
-                        const itemId = item.dataset.id;
-                        const itemContent = bot.text.textArr[itemId];
-                        item.innerHTML = '';
+                        setTimeout(() => {
 
-                        const form = document.createElement('form');
-                        const inp = document.createElement('input');
-                        inp.value = itemContent;
-                        inp.classList.add('editInput');
-                        form.appendChild(inp);
-                        item.appendChild(form);
+                            const item = e.target.closest('.bot--queue-item');
+                            const itemId = item.dataset.id;
+                            const itemContent = bot.text.textArr[itemId];
+                            item.innerHTML = '';
 
-                        form.addEventListener('submit', e => {
-                            e.preventDefault();
+                            const form = document.createElement('form');
+                            const inp = document.createElement('input');
+                            inp.value = itemContent;
+                            inp.classList.add('editInput');
+                            form.appendChild(inp);
+                            item.appendChild(form);
+                            editingListItemId = itemId;
 
-                            const editedValue = inp.value;
-                            bot.text.edit(itemId, editedValue);
-                        });
+                            form.addEventListener('submit', e => {
+                                e.preventDefault();
+
+                                const editedValue = inp.value;
+                                bot.text.edit(itemId, editedValue);
+                                editingListItemId = null;
+                            });
+                        }, 0)
                     } else if(e.target.classList.contains('editInput')) {
                         
                     } else {
@@ -698,6 +725,11 @@ bot ? bot.stop() : null;
                     .editBtn {
                         margin-right: 6px;
                     }
+
+                    .editInput {
+                        width: 100%;
+                        box-sizing: border-box;
+                    }
                 `;
                 // active el - border: 1px solid #f55;
 
@@ -839,11 +871,13 @@ bot ? bot.stop() : null;
             },
 
             setActiveListEl(){
-                this.list.children[this.counter].classList.add('bot--list-active-el');
+                if(this.listLength){
+                    this.list.children[this.counter].classList.add('bot--list-active-el');
 
-                if (this.oldCounter !== this.counter)
-                    this.list.children[this.oldCounter].classList.remove('bot--list-active-el');
-                this.oldCounter = this.counter;
+                    if (this.oldCounter !== this.counter)
+                        this.list.children[this.oldCounter].classList.remove('bot--list-active-el');
+                    this.oldCounter = this.counter;
+                }
             },
 
             insertFromQueue(msg){
@@ -1033,6 +1067,32 @@ bot ? bot.stop() : null;
             removeQueue() {
                 if(confirm('This will clear list of messages. Proceed?'))
                     this.mutateTextArr(!this.isConditsShown ? ['🎈'] : this.initCondArr);
+            },
+
+            updateListItem(id){
+                console.log(id);
+                
+                const item = this.list.children[id];
+                if(item){
+                    item.innerHTML = '';
+
+                    const editBtn = document.createElement('span');
+                    editBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path d="M18 14.45v6.55h-16v-12h6.743l1.978-2h-10.721v16h20v-10.573l-2 2.023zm1.473-10.615l1.707 1.707-9.281 9.378-2.23.472.512-2.169 9.292-9.388zm-.008-2.835l-11.104 11.216-1.361 5.784 5.898-1.248 11.103-11.218-4.536-4.534z"/></svg>'
+                    editBtn.classList.add('editBtn');
+
+                    const frag = document.createDocumentFragment();
+                    const msg = document.createTextNode(this.textArr[id]);
+                    // const msgNode = document.createElement('div');
+                    const edBtn = editBtn.cloneNode(true);
+                    // msgNode.dataset.id = id;
+                    // msgNode.appendChild(edBtn);
+                    // msgNode.appendChild(msg);
+                    // msgNode.classList.add('bot--queue-item');
+                    frag.appendChild(edBtn);
+                    frag.appendChild(msg);
+
+                    item.appendChild(frag)
+                }
             },
 
             updateList(forceMode = false) {
