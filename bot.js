@@ -49,7 +49,7 @@ bot ? bot.stop() : null;
 
     var bot = {
 
-        version: '2.2',
+        version: '2.2.1',
         botInterval: null,
         fakeTypeInterval: null,
         condInterval: null,
@@ -1069,7 +1069,7 @@ bot ? bot.stop() : null;
                 bot.cp.select.value = 'NONE';
             },
 
-            setMode(mode) {
+            setMode(mode, isAuto = false) {
                 if (mode === 'parrot' || mode === 'parrot+') {
                     this.mode = (mode === 'parrot') ? mode : 'parrot+';
                     const reply = bot.cp.replyBox;
@@ -1079,6 +1079,10 @@ bot ? bot.stop() : null;
                     this.mode = mode;
                 else
                     this.mode = null;
+
+                if(isAuto){
+                    bot.cp.selectMode.value = mode;
+                }
 
                 this.reset();
             },
@@ -1143,8 +1147,9 @@ bot ? bot.stop() : null;
                 }
             },
 
-            createListItem(message, id = null){
-                if(!this.isConditsShown){
+            createListItem(message, id = null, forceMode = false){
+                
+                if(forceMode ? forceMode === 'queue' : !this.isConditsShown){
                     let container = null;
                     if(typeof id !== 'number'){
                         container = document.createDocumentFragment();
@@ -1212,7 +1217,7 @@ bot ? bot.stop() : null;
 
                     this.textArr.map((item, id) => {
                         if (item && item !== ' ' && item !== '\n') {
-                            const itemNode = this.createListItem(item, parseInt(id));
+                            const itemNode = this.createListItem(item, parseInt(id), forceMode);
                             frag.appendChild(itemNode);
                         } else {
                             this.textArr.splice(id, 0);
@@ -1229,7 +1234,7 @@ bot ? bot.stop() : null;
                     const frag = document.createDocumentFragment();
                     
                     this.condArr.map((item, id) => {
-                        const container = this.createListItem(item, id)
+                        const container = this.createListItem(item, id, forceMode)
                         frag.appendChild(container);
                     });
                     this.condList.appendChild(frag);
@@ -1318,7 +1323,7 @@ bot ? bot.stop() : null;
                         }
 
                         bot.changeRate(data.settings.rate, false, true);
-                        this.setMode(data.settings.mode);
+                        this.setMode(data.settings.mode, true);
 
                         const switches = data.settings.switches;
                         bot.onOffSpecific('queue', switches.queue);
