@@ -842,7 +842,7 @@ bot ? bot.stop() : null;
                         if(/^\/[\s\S]*\//.test(ifCond)){ // check if ifconditional is a regex
 
                             const userReg = ifCond.replace(/^\/|\/$/g, '');
-                            const reg = new RegExp(userReg); //! causing errors
+                            const reg = new RegExp(userReg); //! causing errors SyntaxError: nothing to repeat 
                             
                             const m = strMsg.match(reg);
                             
