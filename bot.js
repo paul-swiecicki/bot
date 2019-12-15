@@ -227,7 +227,7 @@ bot ? bot.stop() : null;
 
                 this.all.appendChild(this.onOffSwitches);
 
-                createCheckbox('loopDiv', 'loopBox', 'setLoop', 'Loop ', true);
+                createCheckbox('loopDiv', 'loopBox', 'setLoop', 'Loop/Repeat ', true);
                 createCheckbox('replyDiv', 'replyBox', 'setReply', 'Reply Mode ', false, false, (chked) => {
                     this.replyAllDiv.classList.toggle('unactive');
                     this.replyAllBox.disabled = !chked;
@@ -356,8 +356,6 @@ bot ? bot.stop() : null;
                         
                         if (!e.target.closest('.editBtn')){
                             bot.text.updateListItem(editingListItemId);
-                            editingListItemId = null;
-                            // bot.text.updateList();
                         }
                         if(editingListItemId){
                             bot.text.updateListItem(editingListItemId);
@@ -427,7 +425,7 @@ bot ? bot.stop() : null;
                     handleBtns(e.target);
                 });
 
-                createSelect('modes', ['bot--modes'], 'selectMode', ['NONE', 'increment', 'parrot', 'parrot+'], 'Mode ', e => {
+                createSelect('modes', ['bot--modes'], 'selectMode', ['NONE', 'increment', 'parrot'], 'Mode ', e => {
                     bot.text.setMode(e.target.value);
                 });
                 createSelect('templates', ['bot--templates'], 'select', ['NONE', 'waves', 'Bałkanica'], 'Template ', e => {
@@ -776,6 +774,11 @@ bot ? bot.stop() : null;
                         width: 100%;
                         box-sizing: border-box;
                     }
+
+                    .invalid-item {
+                        color: white;
+                        background: #f22;
+                    }
                 `;
                 // active el - border: 1px solid #f55;
 
@@ -820,6 +823,9 @@ bot ? bot.stop() : null;
             msg: '',
             isConditsShown: false,
             counters: ['counter', 'oldCounter'],
+            firstCondSwitch: true,
+            alreadyUsed: [],
+            timesTrying: 0,
 
             edit(id, val){
                 if(!this.isConditsShown)
@@ -838,17 +844,20 @@ bot ? bot.stop() : null;
                         const conds = this.condArr[i];
                         let ifCond = conds.ifs[0];
                         const thenCond = conds.thens[0];
-
+                        // take testing to save it on object when updated
                         if(/^\/[\s\S]*\//.test(ifCond)){ // check if ifconditional is a regex
-
-                            const userReg = ifCond.replace(/^\/|\/$/g, '');
-                            const reg = new RegExp(userReg); //! causing errors SyntaxError: nothing to repeat 
+                            try {
+                                const userReg = ifCond.replace(/^\/|\/$/g, '');
+                                const reg = new RegExp(userReg); // can cause nothing to repeat error
+                                const m = strMsg.match(reg);
                             
-                            const m = strMsg.match(reg);
-                            
-                            if(m){
-                                this.insertMsg(thenCond);
-                                bot.sendMsg();
+                                if(m){
+                                    this.insertMsg(thenCond);
+                                    bot.sendMsg();
+                                }
+                            } catch(err) {
+                                console.log('Invalid RegEx: ', ifCond, err);
+                                this.markInvalid(this.condList.children[i].children[0]);
                             }
                         } else {
                             ifCond = ifCond.trim().toLowerCase()
@@ -861,6 +870,10 @@ bot ? bot.stop() : null;
                     bot.sendMsg();
                 }
             },
+            
+            markInvalid(el){
+                el.classList.add('invalid-item');
+            },
 
             checkCounters(){
                 for(const counterStr of this.counters){
@@ -868,7 +881,7 @@ bot ? bot.stop() : null;
                 }
             },
 
-            insert() {
+            insert(forceFreshMsg = false) {
                 if (this.listLength === 0) {
                     bot.stop();
                     alert('Empty queue!');
@@ -876,26 +889,33 @@ bot ? bot.stop() : null;
                     this.checkCounters()
 
                     if (this.isRandom && !this.afterRandomChecked) {
-                        this.counter = Math.floor(Math.random() * this.listLength);
+                        if(forceFreshMsg){
+                            let noFreshMsg = true;
+                            l1:
+                            for(let textArrId = 0; textArrId < this.listLength; textArrId++){
+                                const msg = this.textArr[textArrId];
+                                l2:
+                                for(let usedId = 0; usedId < this.alreadyUsed.length; usedId++){
+                                    const alreadyUsedMsg = this.alreadyUsed[usedId];
+                                    if(msg !== alreadyUsedMsg){
+                                        this.counter = textArrId;
+                                        noFreshMsg = false;
+                                        break l1;
+                                    }
+                                }
+                            }
+
+                            if(noFreshMsg){
+                                this.alreadyUsed = [];
+                            }
+                        } else {
+                            this.counter = Math.floor(Math.random() * this.listLength);
+                        }
                     }
 
                     switch (this.mode) {
                         case 'parrot': {
                             this.insertMsg(this.getStrangerMsg());
-                        }
-                        break;
-
-                        case 'parrot+': {
-                            const msgRaw = this.textArr[this.counter];
-                            const msgSplted = msgRaw.split('$msg', 2);
-
-                            let msg = '';
-                            if(msgSplted.length > 1){
-                                msg = msgSplted[0] + this.getStrangerMsg() + (msgSplted[1] ? msgSplted[1] : '');
-                            } else {
-                                msg = msgSplted[0];
-                            }
-                            this.insertFromQueue(msg);
                         }
                         break;
 
@@ -908,7 +928,8 @@ bot ? bot.stop() : null;
                         break;
 
                         default: {
-                            this.insertFromQueue(this.textArr[this.counter]);
+                            const msg = this.textArr[this.counter];
+                            this.insertFromQueue(msg);
                         }
                     }
 
@@ -920,6 +941,8 @@ bot ? bot.stop() : null;
             },
 
             setActiveListEl(){
+                this.checkCounters();
+
                 if(this.listLength){
                     this.list.children[this.counter].classList.add('bot--list-active-el');
 
@@ -930,25 +953,67 @@ bot ? bot.stop() : null;
             },
 
             insertFromQueue(msg){
-                this.insertMsg(msg);
-                if (!this.isRandom) this.counter++;
-                
-                if (this.counter+1 > this.listLength) {
-                    if (!this.isRandom) this.counter = 0;
-                    if (!this.isLoop) bot.stop();
+                let isAlreadyUsed = false;
+
+                if(this.isRandom && !this.isLoop){ // no repeat when random
+                    this.timesTrying++;
+                    
+                    if(this.timesTrying >= 4){ 
+                        this.timesTrying = 0;
+                        this.alreadyUsed = [];
+                        this.insert();
+                    } else { // try to use random message that hasn't been used 3 times, else select fresh msg
+                        isAlreadyUsed = this.alreadyUsed.find(item => msg === item) ? true : false;
+                        // console.log(isAlreadyUsed);
+                        
+                        if(isAlreadyUsed){
+                            this.insert()
+                        } else {
+                            this.insertMsg(msg);
+                        }
+                    }
+                } else {
+                    this.insertMsg(msg);
+                }
+
+                if(!isAlreadyUsed){
+                    if (!this.isRandom){
+                        this.counter++;
+                    }
+                    
+                    if (this.counter+1 > this.listLength) {
+                        if (!this.isRandom) this.counter = 0;
+                        if (!this.isLoop) bot.stop();
+                    }
+
+                    this.alreadyUsed.push(msg);
+                    if(this.alreadyUsed.length >= this.listLength)
+                        this.alreadyUsed = []
                 }
             },
 
             insertMsg(msg) {
-                this.input.value = msg;
+                const msgSplted = msg.split('$msg', 2);
+
+                let msgFinal = '';
+                if(msgSplted.length > 1){
+                    msgFinal = msgSplted[0] + this.getStrangerMsg() + (msgSplted[1] ? msgSplted[1] : '');
+                } else {
+                    msgFinal = msgSplted[0];
+                }
+
+                this.input.value = msgFinal;
             },
 
             getStrangerMsg() {
-                if(bot.isLastMsgStrangers()){
-                    const strangerMsg = bot.log.lastChild.textContent;
+                // if(bot.isLastMsgStrangers()){
+                const strMsgEls = bot.log.querySelectorAll('.log-stranger');
+                if(strMsgEls.length){
+                    const strangerMsg = strMsgEls[strMsgEls.length-1].textContent;
                     return strangerMsg.replace(/Obcy:\s/, '');
+                    // const strangerMsg = bot.log.lastChild.textContent;
                 } else
-                    return null
+                    return ''
             },
 
             setLoop(state) {
@@ -1000,7 +1065,10 @@ bot ? bot.stop() : null;
                 this.presentList = state ? 'list' : 'condList';
                 this.presentListLength = state ? 'listLength' : 'condListLength';
 
-                this.updateList();
+                if(this.firstCondSwitch){
+                    this.updateList();
+                    this.firstCondSwitch = false;
+                }
             },
 
             realTypeSetup() {
@@ -1070,8 +1138,8 @@ bot ? bot.stop() : null;
             },
 
             setMode(mode, isAuto = false) {
-                if (mode === 'parrot' || mode === 'parrot+') {
-                    this.mode = (mode === 'parrot') ? mode : 'parrot+';
+                if (mode === 'parrot') {
+                    this.mode = 'parrot';
                     const reply = bot.cp.replyBox;
                     if (!reply.checked)
                         reply.click();
@@ -1433,7 +1501,10 @@ bot ? bot.stop() : null;
 
         runSetup() {
             if(this.isCondsRunning){
-                this.text.checkCond();
+                if(!this.text.isReply)
+                    this.text.checkCond();
+                else if (this.isLastMsgStrangers())
+                    this.text.checkCond();
             }
 
             if(this.isQueueRunning){
