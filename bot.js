@@ -49,7 +49,7 @@ bot ? bot.stop() : null;
 
     var bot = {
 
-        version: '2.2.1',
+        version: '2.3',
         botInterval: null,
         fakeTypeInterval: null,
         condInterval: null,
@@ -251,6 +251,13 @@ bot ? bot.stop() : null;
                     });
                 // ################################################################################################
                 createBtn('conditsSwitch', 'conditionals >', ['bot--condits-switch', 'bot--btn'], this.handleConditsSwitch.bind(this));
+
+                appendElWithText('beginLabel', ['begin-label'], 'Start chat with: ', 'all', 'span');
+                this.beginInput = document.createElement('input');
+                this.beginInput.classList.add('begin');
+                this.beginInput.placeholder = 'Message';
+                createParentDivAndAppend('beginDiv', ['beginLabel', 'beginInput'])
+                this.beginDiv.classList.add('begin-div');
 
                 const createSelect = (parentDiv, parentClasses, select, optionsArr, label, selectFn) => {
                     this[parentDiv] = document.createElement('div');
@@ -657,7 +664,7 @@ bot ? bot.stop() : null;
                         display: flex;
                         justify-content: space-between;
                         align-items: center;
-                        margin: 10px 0 5px;
+                        margin: 5px 0 5px;
                     }
 
                     .bot--expimp {
@@ -779,6 +786,10 @@ bot ? bot.stop() : null;
                         color: white;
                         background: #f22;
                     }
+
+                    .begin-div {
+                        margin-top: 10px;
+                    }
                 `;
                 // active el - border: 1px solid #f55;
 
@@ -826,6 +837,17 @@ bot ? bot.stop() : null;
             firstCondSwitch: true,
             alreadyUsed: [],
             timesTrying: 0,
+
+            startChat(){
+                const msg = bot.cp.beginInput.value;
+                
+                if(msg){
+                    setTimeout(() => {
+                        this.insertMsg(msg);
+                        bot.sendMsg();
+                    }, 1000);
+                }
+            },
 
             edit(id, val){
                 if(!this.isConditsShown)
@@ -1339,7 +1361,8 @@ bot ? bot.stop() : null;
                             conds: bot.isCondsRunning
                         },
                         rate: bot.rate,
-                        mode: this.mode
+                        mode: this.mode,
+                        begin: bot.cp.beginInput.value
                     },
                       
                     textArr: this.textArr,
@@ -1388,6 +1411,9 @@ bot ? bot.stop() : null;
                                 boxEl.click();
                             }
                         }
+
+                        const begin = data.settings.begin;
+                        bot.cp.beginInput.value = begin ? begin : '';
 
                         bot.changeRate(data.settings.rate, false, true);
                         this.setMode(data.settings.mode, true);
@@ -1538,7 +1564,10 @@ bot ? bot.stop() : null;
         leaveIfDisconnected() {
             if (this.btn.classList.contains('disabled') && this.isAutoNext) {
                 this.btnEsc.click();
-                this.text.reset();
+                if(!this.text.isRandom)
+                    this.text.reset();
+
+                this.text.startChat();
             }
         },
 
