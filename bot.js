@@ -850,8 +850,8 @@ bot ? bot.stop() : null;
                                 const userReg = ifCond.replace(/^\/|\/$/g, '');
                                 const reg = new RegExp(userReg); // can cause nothing to repeat error
                                 const m = strMsg.match(reg);
-                            
-                                if(m){
+                                
+                                if(m ? m.length : 0){
                                     this.insertMsg(thenCond);
                                     bot.sendMsg();
                                 }
@@ -867,7 +867,7 @@ bot ? bot.stop() : null;
                             }
                         }
                     }
-                    bot.sendMsg();
+                    // bot.sendMsg();
                 }
             },
             
@@ -1276,7 +1276,6 @@ bot ? bot.stop() : null;
             },
 
             updateList(forceMode = false) {
-                // console.trace();
                 
                 if(forceMode ? forceMode === 'queue' : !this.isConditsShown){
                     this.list.innerHTML = '';
@@ -1449,11 +1448,6 @@ bot ? bot.stop() : null;
             //         this.text.checkCond();
             //     }, this.condRate);
             // }
-            
-            this.botInterval = setInterval(() => {
-                this.runSetup();
-            }, this.rate);
-
             if(this.isQueueRunning){
                 if (this.text.isFakeType) {
                     let state = 1;
@@ -1475,6 +1469,10 @@ bot ? bot.stop() : null;
                     }, this.text.fakeTypeRate);
                 }
             }
+            
+            this.botInterval = setInterval(() => {
+                this.runSetup();
+            }, this.rate);
 
             this.isRunning = true;
         },

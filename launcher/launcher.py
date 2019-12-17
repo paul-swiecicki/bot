@@ -87,6 +87,9 @@ def openTab(browser = 'firefox'):
 
 # window.mainloop()
 #######################################################################
+
+# zezwalaj na wklejanie do firefoxa
+
 noInstall = False
 if not noInstall:
     from tkinter import messagebox
