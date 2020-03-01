@@ -4,7 +4,7 @@ block_cipher = None
 
 
 a = Analysis(['launcher.py'],
-             pathex=['C:\\Users\\Chw\\Desktop\\PROG\\web coding\\playin\\boty\\launcher'],
+             pathex=['C:\\Users\\Chw\\Desktop\\PROG\\web coding\\boty\\launcher'],
              binaries=[],
              datas=[],
              hiddenimports=[],
@@ -30,4 +30,4 @@ exe = EXE(pyz,
           upx=True,
           upx_exclude=[],
           runtime_tmpdir=None,
-          console=True , icon='C:\\Users\\Chw\\Desktop\\PROG\\web coding\\playin\\boty\\launcher\\bloon.ico')
+          console=True , icon='C:\\Users\\Chw\\Desktop\\PROG\\web coding\\boty\\launcher\\bloon.ico')

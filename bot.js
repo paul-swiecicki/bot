@@ -38,18 +38,30 @@ bot ? bot.stop() : null;
     const editBtn = document.createElement('span');
     editBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path d="M18 14.45v6.55h-16v-12h6.743l1.978-2h-10.721v16h20v-10.573l-2 2.023zm1.473-10.615l1.707 1.707-9.281 9.378-2.23.472.512-2.169 9.292-9.388zm-.008-2.835l-11.104 11.216-1.361 5.784 5.898-1.248 11.103-11.218-4.536-4.534z"/></svg>'
     editBtn.classList.add('editBtn', 'queue-icon');
+    editBtn.title = 'Edit message'
 
     const handleBtn = document.createElement('span');
     handleBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path d="M24 12l-6-5v4h-5v-5h4l-5-6-5 6h4v5h-5v-4l-6 5 6 5v-4h5v5h-4l5 6 5-6h-4v-5h5v4z"/></svg>'
     handleBtn.classList.add('bot-handle', 'queue-icon');
+    handleBtn.title = 'Move message'
 
     const removeBtn = document.createElement('span');
     removeBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"><path d="M24 20.188l-8.315-8.209 8.2-8.282-3.697-3.697-8.212 8.318-8.31-8.203-3.666 3.666 8.321 8.24-8.206 8.313 3.666 3.666 8.237-8.318 8.285 8.203z"/></svg>';
     removeBtn.classList.add('bot-remove', 'queue-icon');
+    removeBtn.title = 'Delete message'
+    
+    const applyBtn = document.createElement('span');
+    applyBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"><path d="M12 2c5.514 0 10 4.486 10 10s-4.486 10-10 10-10-4.486-10-10 4.486-10 10-10zm0-2c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm6 13h-5v5h-2v-5h-5v-2h5v-5h2v5h5v2z"/></svg>';
+    applyBtn.classList.add('bot-temp-apply');
+    applyBtn.title = 'Apply template'
+
+    const menuBtn = document.createElement('span');
+    menuBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path d="M12 18c1.657 0 3 1.343 3 3s-1.343 3-3 3-3-1.343-3-3 1.343-3 3-3zm0-9c1.657 0 3 1.343 3 3s-1.343 3-3 3-3-1.343-3-3 1.343-3 3-3zm0-9c1.657 0 3 1.343 3 3s-1.343 3-3 3-3-1.343-3-3 1.343-3 3-3z"/></svg>';
+    menuBtn.classList.add('bot-temp-menu');
 
     var bot = {
 
-        version: '2.3',
+        version: '3.0',
         botInterval: null,
         fakeTypeInterval: null,
         condInterval: null,
@@ -85,6 +97,8 @@ bot ? bot.stop() : null;
                 sortablejs.id = 'sortablejs';
                 sortablejs.src = 'https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js';
                 body.appendChild(sortablejs);
+
+                const backendUrl = 'https://bloonbot.herokuapp.com/';
 
                 const constructCond = (ifval, thenval) => {
                     return msg = {
@@ -136,13 +150,49 @@ bot ? bot.stop() : null;
                 this.all = document.createElement('div');
                 this.all.id = 'bot--all-without-hide-btn'
 
-                const createParentDivAndAppend = (el, childEl, parentEl = 'all', elType = 'div') => { //childEl must be an array
+                const createParentDiv = (el, childEl, elType = 'div') => { //childEl must be an array
                     this[el] = document.createElement(elType);
 
                     for (let i = 0; i < childEl.length; i++) {
-                        this[el].appendChild(this[childEl[i]]);
+                        const child = childEl[i]
+                        if(typeof child === 'string'){
+                            this[el].appendChild(this[child]);
+                        } else {
+                            this[el].appendChild(child);
+                        }
                     }
+
+                    return this[el]
+                }
+
+                const createParentDivAndAppend = (el, childEl, parentEl = 'all', elType = 'div') => { //childEl must be an array
+                    this[el] = createParentDiv(el, childEl, elType);
                     this[parentEl].appendChild(this[el]);
+
+                    return this[el]
+                }
+
+                const makeEl = (classes = [], childElsOrText = '', elType = 'div') => {
+                    el = document.createElement(elType)
+                    
+                    if(childElsOrText){
+                        if(typeof childElsOrText === 'string')
+                            el.appendChild(document.createTextNode(childElsOrText));
+                        else {
+                            if(!Array.isArray(childElsOrText)) el.appendChild(childElsOrText)
+                            else {
+                                for (let i = 0; i < childElsOrText.length; i++) {
+                                    const child = childElsOrText[i]
+                                    el.appendChild(child)
+                                }
+                            }
+                        }
+                    }
+
+                    if(Array.isArray(classes)) el.classList.add(...classes)
+                    else if (classes) el.classList.add(classes)
+
+                    return el
                 }
 
                 const createCheckbox = (parentEl, el, setFunction, label, checked = false, disabled = false, fn) => {
@@ -166,7 +216,11 @@ bot ? bot.stop() : null;
                     addIdAndClasses(this[btn], null, classes);
                     this[btn].appendChild(document.createTextNode(text));
                     this[btn].addEventListener('click', clickFn);
-                    this[parentEl].appendChild(this[btn]);
+
+                    if(typeof parentEl === 'string')
+                        this[parentEl].appendChild(this[btn]);
+                    else
+                        parentEl.appendChild(this[btn])
                 }
 
                 const createRange = (parentEl, parentElId, label, labelText, controller, controllerId, min, max, value, step, fn) => {
@@ -193,6 +247,8 @@ bot ? bot.stop() : null;
 
                     this[el].appendChild(textEl);
                     this[parentEl].appendChild(this[el]);
+
+                    return this[el]
                 }
 
                 createBtn('hideBtn', 'HIDE', ['bot--btn', 'bot--hide-btn'],
@@ -249,6 +305,7 @@ bot ? bot.stop() : null;
                     e => {
                         bot.toggleAutoNext();
                     });
+                this.btnAutoNext.title = 'If enabled, bot will automatically start another chat when other chatter disconnects.';
                 // ################################################################################################
                 createBtn('conditsSwitch', 'conditionals >', ['bot--condits-switch', 'bot--btn'], this.handleConditsSwitch.bind(this));
 
@@ -303,12 +360,13 @@ bot ? bot.stop() : null;
                 });
 
                 this.removeCondsBtn.type = 'button';
+                this.removeCondsBtn.title = 'Clear list of conditionals.';
 
-                this.sub = document.createElement('input');
-                this.sub.type = 'submit';
-                this.sub.classList.add('necessary_submit');
+                const sub = document.createElement('input');
+                sub.type = 'submit';
+                sub.classList.add('necessary_submit');
 
-                createParentDivAndAppend('condControl', ['condIfDiv', 'condThenDiv', 'removeCondsBtn', 'sub']);
+                createParentDivAndAppend('condControl', ['condIfDiv', 'condThenDiv', 'removeCondsBtn', sub]);
                 this.condControl.classList.add('bot--list-control');
 
                 this.condList = document.createElement('div');
@@ -341,11 +399,13 @@ bot ? bot.stop() : null;
                 createBtn('resetQueueBtn', 'R', ['bot--btn'], e => {
                     bot.text.reset();
                 });
+                this.resetQueueBtn.title = 'Start from first message.';
 
                 createBtn('removeQueueBtn', 'X', ['bot--btn'], e => {
                     bot.text.removeQueue();
                 });
                 this.removeQueueBtn.id = 'bot--remove-queue';
+                this.removeQueueBtn.title = 'Clear the queue of messages.';
 
                 this.upperDiv = document.createElement('div');
                 this.upperDiv.classList.add('bot--list-control');
@@ -463,40 +523,267 @@ bot ? bot.stop() : null;
 
                 this.expImp = document.createElement('div');
                 this.exportDiv = document.createElement('div');
+
                 this.importDiv = document.createElement('form');
+                this.importDiv.classList.add('bot--import-div');
+                this.importTop = document.createElement('div');
+                this.importTop.classList.add('import-top')
+                
                 this.importDiv.addEventListener('submit', e => {
                     e.preventDefault();
                     imp();
                 });
                 this.expImp.classList.add('bot--expimp');
                 createBtn('exportBtn', '< Export >', ['bot--btn', 'bot--export'],
-                    e => {
-                        const name = this.expName.value;
-                        bot.text.export(name);
-                    }, 'exportDiv');
-
+                e => {
+                    const name = this.expName.value;
+                    bot.text.export(name);
+                }, 'exportDiv');
+                this.exportBtn.title = 'Export to file.';
+                
                 createBtn('importBtn', '> Import <', ['bot--btn', 'bot--import'],
-                    e => {
-                        // imp();
-                    }, 'importDiv');
-
+                e => {
+                    // imp();
+                }, 'importTop');
+                this.importBtn.title = 'Import from text or file.';
+                
                 this.expName = document.createElement('input');
                 this.expName.placeholder = 'file name';
                 this.expName.id = 'bot--expName';
-
+                
                 this.impSeparation = document.createElement('input');
                 this.impSeparation.placeholder = 'sep.';
                 this.impSeparation.id = 'bot--impSep';
-
+                this.impSeparation.title = '(ONLY for importing text) Separation - eg. "," will split "i, like, pepper" to messages "i", "like" and "pepper"';
+                
                 this.importFile = document.createElement('input');
+                this.importFile.classList.add('import-file');
                 this.importFile.type = 'file';
-
+                
                 this.exportDiv.classList.add('bot--export-div');
                 this.exportDiv.appendChild(this.expName);
-                this.importDiv.classList.add('bot--import-div');
-                this.importDiv.appendChild(this.impSeparation);
-                this.importDiv.appendChild(this.importFile);
 
+                this.importTop.appendChild(this.impSeparation);
+                this.importTop.appendChild(this.importFile);
+
+                const makeInput = (labelText, required = false) => {
+                    const label = makeEl('', labelText, 'span')
+                    const input = makeEl('', '', 'input')
+                    input.required = required;
+                    // nameInp.name = name;
+                    
+                    return {
+                        input,
+                        container: makeEl('input-container', [label, input])
+                    }
+                }
+
+                // upload window and button
+                (() => {
+                    const nameInputObj = makeInput('Template name: ', true)
+                    const windowContent = makeEl('upload-content', [nameInputObj.container], 'form')
+                    // windowContent.action = backendUrl;
+                    // windowContent.method = 'POST';
+                    
+                    createBtn('uploadBtn', '', ['bot--btn', 'icon-btn', 'upload-btn'], e => {
+                        if(!e.explicitOriginalTarget.classList.contains('upload-input')){
+                            if(!e.target.closest('.upload-window') && !e.target.closest('.template-menu')){
+                                this.uploadWindow.classList.toggle('off')
+                                if(!this.searchWindow.classList.contains('off')) this.searchWindow.classList.add('off')
+                            }
+                        }
+
+                    }, 'exportDiv')
+
+                    this.uploadBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M16 16h-3v5h-2v-5h-3l4-4 4 4zm3.479-5.908c-.212-3.951-3.473-7.092-7.479-7.092s-7.267 3.141-7.479 7.092c-2.57.463-4.521 2.706-4.521 5.408 0 3.037 2.463 5.5 5.5 5.5h3.5v-2h-3.5c-1.93 0-3.5-1.57-3.5-3.5 0-2.797 2.479-3.833 4.433-3.72-.167-4.218 2.208-6.78 5.567-6.78 3.453 0 5.891 2.797 5.567 6.78 1.745-.046 4.433.751 4.433 3.72 0 1.93-1.57 3.5-3.5 3.5h-3.5v2h3.5c3.037 0 5.5-2.463 5.5-5.5 0-2.702-1.951-4.945-4.521-5.408z"/></svg>'
+                    const topBar = makeEl('top-bar', 'Upload template')
+
+                    const uploadWindow = createParentDivAndAppend('uploadWindow', [topBar, windowContent], 'uploadBtn')
+                    uploadWindow.classList.add('upload-window', 'bot-window', 'off')
+
+                    createBtn('closeUpload', 'X', ['bot--btn'], e => {
+                        this.uploadWindow.classList.add('off')
+                    }, topBar)
+                    
+
+                    createBtn('uploadTemp', 'Upload', ['bot--btn', 'upload-temp'], e => {
+                        e.preventDefault()
+                        
+                        // const data = new URLSearchParams(new FormData(windowContent));
+                        const data = bot.text.packData();
+                        
+                        fetch(backendUrl+'templates', {
+                            method: 'POST',
+                            headers: {
+                                'Content-type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                name: nameInputObj.input.value,
+                                author: {
+                                    name: 'adminek'
+                                },
+                                template: data
+                            })
+                            })
+                            .then(res => {
+                                return res.json()
+                            })
+                            .then(data => {
+                                console.log(data)
+                            })
+                            .catch(err => console.log(err));
+                    }, windowContent)
+                })();
+
+                ///////////////////////////////////////////////////////////////////
+
+                // search window and button
+                (() => {
+                    const fetchTemplates = () => {
+                        if(!this.searchWindow.classList.contains('off')){
+                            this.templatesResult.appendChild(makeEl('bot-loading', 'Loading templates...'))
+                            fetch(backendUrl+'templates')
+                            .then(res => {
+                                if(res.ok){
+                                    return res.json()
+                                } else {
+                                    console.log(res);
+                                }
+                            })
+                            .then(data => {
+                                this.templatesResult.innerHTML = '';
+                                const frag = document.createDocumentFragment();
+
+                                for(item of data){
+                                    const templatePeek = makeEl('template-peek')
+                                    const tempName = makeEl('template-name', '', 'span')
+                                    const name = item.name;
+                                    tempName.textContent = name ? name : 'unknown';
+                                    const tempAuthor = makeEl('template-author', (' by ' + (item.author ? item.author.name : 'unknown')), 'span')
+                                    // there might be a problem if there is author object but no author.NAME in it
+                                    if(item.template){
+                                        const textArr = item.template.textArr;
+                                        let peekString = textArr[0];
+
+                                        for(let i=1; i<textArr.length; i++){
+                                            if(i>5) break;
+                                            const item = textArr[i];
+                                            peekString = peekString + ', ' + item;
+                                        }
+                                        
+                                        peekString = document.createTextNode(peekString)
+                                        templatePeek.appendChild(peekString)
+                                    }
+                                    
+                                    const templateTop = makeEl('template-top', [menuBtn.cloneNode(true), tempName, tempAuthor, applyBtn.cloneNode(true)])
+                                    const template = makeEl('template', [templateTop, templatePeek]);
+                                    template.dataset.id = item._id;
+                                    frag.appendChild(template);
+                                }
+
+                                this.templatesResult.appendChild(frag)
+                            });
+                        }
+                    }
+
+                    createBtn('searchBtn', '', ['bot--btn', 'icon-btn', 'search-btn'], e => {
+                        e.preventDefault()
+                        // console.log(e.target.closest('.search-window'));
+                        if(!e.target.closest('.search-window') && !e.target.closest('.template-menu')){
+                            if(!this.uploadWindow.classList.contains('off')) this.uploadWindow.classList.add('off')
+                            this.searchWindow.classList.toggle('off')
+                            fetchTemplates()
+                        }
+                    }, 'importTop')
+
+                    this.searchBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M23.822 20.88l-6.353-6.354c.93-1.465 1.467-3.2 1.467-5.059.001-5.219-4.247-9.467-9.468-9.467s-9.468 4.248-9.468 9.468c0 5.221 4.247 9.469 9.468 9.469 1.768 0 3.421-.487 4.839-1.333l6.396 6.396 3.119-3.12zm-20.294-11.412c0-3.273 2.665-5.938 5.939-5.938 3.275 0 5.94 2.664 5.94 5.938 0 3.275-2.665 5.939-5.94 5.939-3.274 0-5.939-2.664-5.939-5.939z"/></svg>'
+                    
+                    const topBar = createParentDivAndAppend('topBar', [])
+                    topBar.classList.add('top-bar')
+
+                    const search = createParentDivAndAppend('search', [], 'topBar', 'input') // search bar
+                    search.placeholder = 'Search for templates...'
+                    createBtn('searchClose', 'X', ['close', 'bot--btn'], e => {
+                        this.searchWindow.classList.add('off')
+                    }, 'topBar')
+                    createParentDivAndAppend('searchWindow', ['topBar'])
+                    createParentDivAndAppend('templatesResult', [], 'searchWindow')
+                    this.templatesResult.classList.add('templates-result')
+                    const loadingTemplates = makeEl('bot-loading', 'Loading templates...')
+                    this.templatesResult.appendChild(loadingTemplates)
+                    fetchTemplates()
+
+                    this.searchWindow.classList.add('search-window', 'bot-window', 'off')
+                    this.searchBtn.appendChild(this.searchWindow)
+
+                    this.templatesResult.addEventListener('click', e => {
+                        const tempEl = e.target.closest('.template')
+
+                        if(!tempEl) return
+                        const tempId = tempEl.dataset.id;
+                        let btnEl;
+
+                        if(e.target.closest('.bot-temp-apply')){
+                            fetch(backendUrl+'templates/' + tempId)
+                            .then(res => {
+                                if(res.ok){
+                                    return res.json()
+                                } else {
+                                    console.log(res);
+                                }
+                            })
+                            .then(data => {
+                                bot.text.import('', data.template, true)
+                            })
+
+                        } else if(btnEl = e.target.closest('.bot-temp-menu')){
+                            if(e.target.closest('.template-menu')){
+                                removeMenuWindow()
+                                if(e.target.classList.contains('template-option')){
+                                    fetch(backendUrl+'templates/' + tempId, {
+                                        method: 'DELETE'
+                                    })
+                                    .then(res => {
+                                        if(res.ok){
+                                            return res.json()
+                                        } else {
+                                            console.log(res);
+                                        }
+                                    })
+                                    .then(data => {
+                                        fetchTemplates()
+                                    })
+                                }
+                            } else 
+                                createMenuWindow(btnEl, tempId)
+                        }
+                    })
+                    
+                    let tempMenu = '';
+                    let oldTempId = '';
+                    const removeMenuWindow = () => {if(tempMenu) tempMenu.remove()}
+                    const createMenuWindow = (btnEl, tempId) => {
+                        removeMenuWindow()
+                        if(tempId !== oldTempId){
+                            deleteOption = makeEl(['template-option', 'option-delete'], 'Delete')
+                            tempMenu = makeEl('template-menu', deleteOption)
+
+                            btnEl.appendChild(tempMenu)
+                            oldTempId = tempId;
+                        } else oldTempId = ''
+                    }
+
+                    body.addEventListener('click', e => {
+                        if(tempMenu){
+                            if(!e.target.closest('.bot-temp-menu') && !e.target.closest('.template-menu')){
+                                oldTempId = '';
+                                tempMenu.remove();
+                            }
+                        }
+                    })
+                })()
+
+                this.importDiv.appendChild(this.importTop)
                 this.importInput = document.createElement('textarea');
                 this.importInput.placeholder = 'Paste or type in some text to import';
                 this.importDiv.appendChild(this.importInput);
@@ -506,12 +793,93 @@ bot ? bot.stop() : null;
                 this.all.appendChild(this.expImp);
 
                 this.panel.appendChild(this.hideBtn);
-                createBtn('sideSwitch', '<|>', ['sideSwitch', 'bot--btn'], e => {
+
+                createBtn('sideSwitch', '<|>', ['top-btns', 'bot--btn', 'icon-btn', 'side-switch'], e => {
                     this.panel.style.setProperty('right', this.position === 'right' ? 'initial' : 0);
 
                     this.position = (this.position === 'right' ? 'left' : 'right');
                 }, 'panel')
-                appendElWithText('title', ['bot--title'], 'Bl🎈🎈nBot v' + bot.version, 'panel');
+                this.sideSwitch.title = 'Change bot position (left/right)';
+                this.sideSwitch.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M6 13v4l-6-5 6-5v4h3v2h-3zm9-2v2h3v4l6-5-6-5v4h-3zm-4-6v14h2v-14h-2z"/></svg>';
+                
+                // sign in up window
+                (() => {
+                    createBtn('userBtn', 'Sign in/Register', ['top-btns', 'bot--btn', 'icon-btn'], e => {
+                        if(!e.target.closest('.bot-window'))
+                            signWindow.classList.toggle('off')
+                    }, 'panel')
+
+                    const loginObj = makeInput('Login: ', 1)
+                    const passObj = makeInput('Password: ', 1)
+                    
+                    this.userBtn.title = 'Sign in/Register';
+                    this.userBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8 9v-4l8 7-8 7v-4h-8v-6h8zm2-7v2h12v16h-12v2h14v-20h-14z"/></svg>';
+                    
+                    createBtn('closeSign', 'X', ['bot--btn'], e => {
+                        signWindow.classList.add('off')
+                    })
+                    
+                    const windowContent = makeEl('', [loginObj.container, passObj.container])
+
+                    const signIn = makeEl(['sign-title'], 'Sign in');
+                    const signUp = makeEl(['sign-title', 'active'], 'Register');
+                    const signSwitch = makeEl(['bot--container', 'sign-switch'], [signUp, signIn]);
+                    
+                    let signSwitchState = 'up';
+                    signSwitch.addEventListener('click', e => {
+                        signIn.classList.toggle('active')
+                        signUp.classList.toggle('active')
+
+                        if(signSwitchState === 'up'){
+                            signSwitchState = 'in'
+                            this.signBtn.textContent = 'Sign in';
+                        } else {
+                            signSwitchState = 'up'
+                            this.signBtn.textContent = 'Register';
+                        }
+                    })
+                    const topBar = makeEl('top-bar', [signSwitch, this.closeSign]);
+                    const signWindow = makeEl(['sign-window', 'bot-window'], [topBar, windowContent])
+                    signWindow.title = ''
+
+                    createBtn('signBtn', 'Register', ['bot--btn'], e => {
+                        const user = {
+                            login: loginObj.input.value,
+                            password: passObj.input.value
+                        }
+
+                        const url = backendUrl + 'users/' + (signSwitchState === 'up' ? 'register' : 'signin');
+                        fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'Content-type': 'application/json'
+                            },
+                            body: JSON.stringify(user)
+                        })
+                        .then(async res => {
+                            // return res.json()
+                            const contentType = res.headers.get("content-type");
+
+                            if (contentType && contentType.indexOf("application/json") !== -1) {
+                              const data = await res.json();
+                                console.log(data);
+                            } else if(res.ok){
+                                sessionStorage.setItem('loggedIn', user.login)
+                            }
+                        // }).then(data => {
+                            // console.log(data)
+                        }).catch(err => console.log(err));
+                    }, signWindow)
+                    
+                    this.userBtn.appendChild(signWindow)
+                })()
+
+                appendElWithText('title', ['bot--title'], 'BloonBot v' + bot.version, 'panel');
+                // createParentDivAndAppend('mainBar', ['hideBtn', 'sideSwitch', 'userBtn', 'title'], 'panel');
+                const mainBtnsContainer = makeEl(['bot--container'], [this.hideBtn, this.sideSwitch, this.userBtn])
+                const mainTopBar = makeEl(['bot--container'], [mainBtnsContainer, this.title])
+
+                this.panel.appendChild(mainTopBar);
                 this.panel.appendChild(this.all);
 
                 body.insertBefore(this.panel, body.firstChild);
@@ -548,19 +916,75 @@ bot ? bot.stop() : null;
                         width: 450px;
                         background: #0008;
                         box-sizing: border-box;
+                        font-family: roboto, arial;
                     }
 
-                    .sideSwitch {
-                        margin-left: 10px;
+                    input, textarea {
+                        box-sizing: border-box;
                     }
-
+                    
                     #botPanel label *, #botPanel label {
                         cursor: pointer;
+                    }
+                    
+                    .top-btns {
+                        margin-left: 10px;
+                        fill: white;
+                    }
+
+                    .side-switch {
+                        padding: 2px !important;
+                    }
+
+                    .sign-window {
+                        top: 0;
+                        bottom: initial !important;
+                    }
+
+                    .sign-window .bot--btn {
+                        margin-top: 10px;
+                    }
+
+                    .sign-title {
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        padding: 5px;
+                        border: 2px solid #aaa;
+                        color: #aaa;
+                        cursor: pointer;
+                    }
+
+                    .sign-title.active {
+                        border: 2px solid white;
+                        color: white;
+                    }
+
+                    .sign-title:nth-of-type(2) {
+                        margin-left: 5px;
+                    }
+
+                    .input-container {
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                    }
+
+                    .sign-window .input-container {
+                        margin-top: 5px;
+                    }
+
+                    .input-container input {
+                        flex: 1;
+                        margin-left: 5px;
+                    }
+
+                    .form-input-label {
+                        margin-top: 0 !important;
                     }
 
                     .bot--title {
                         display: inline-block;
-                        position: absolute;
                         right: 10px;
                         color: #fff8;
                         font-weight: bold;
@@ -582,7 +1006,6 @@ bot ? bot.stop() : null;
                         display: flex;
                         justify-content: space-between;
                         align-items: center;
-                        margin-top: 10px;
                     }
 
                     .bot--queue-item {
@@ -675,8 +1098,16 @@ bot ? bot.stop() : null;
                     }
 
                     .bot--expimp input[type='file']{
-                        width: 200px;
+                        width: 250px;
                         margin-left: 10px;
+                    }
+
+                    .import-top {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        height: 30px;
+                        margin-top: 10px;
                     }
 
                     .bot--expimp input{
@@ -689,7 +1120,6 @@ bot ? bot.stop() : null;
 
                     .bot--import {
                         background: #8f8;
-                        margin-top: 10px;
                         color: #080;
                     }
 
@@ -699,12 +1129,139 @@ bot ? bot.stop() : null;
                     }
 
                     #bot--impSep {
-                        width: 25px;
-                        height: 15px;
+                        width: 30px;
                     }
 
                     #bot--expName {
                         width: 60px;
+                    }
+
+                    .bot--export-div {
+                        position: relative;
+                    }
+
+                    .upload-btn {
+                        background: #f88;
+                        fill: #800;
+                        position: absolute !important;
+                        right: 0;
+                        top: 0;
+                    }
+
+                    .upload-content {
+                        margin-top: 10px;
+                    }
+
+                    .upload-temp {
+                        background: #f88;
+                        color: #800;
+                        grid-column: 2/4;
+                        grid-row: end;
+                        margin-top: 10px;
+                    }
+
+                    .search-btn {
+                        background: #8f8;
+                        fill: #080;
+                    }
+                    
+                    .search-window {
+                        height: 500px;
+                    }
+
+                    .icon-btn {
+                        width: 30px;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        position: relative;
+                    }
+
+                    .bot-window {
+                        position: absolute;
+                        left: 40px;
+                        bottom: 30px;
+                        background: #0008;
+                        width: 400px;
+                        cursor: auto;
+                        padding: 10px;
+                        font-weight: normal;
+                    }
+                    
+                    .bot-window .top-bar {
+                        display: flex;
+                        justify-content: space-between;
+                        font-size: 1.2em;
+                        font-weight: bold;
+                    }
+                    
+                    .bot-window.off {
+                        display: none;
+                        pointer-events: none;
+                    }
+                    
+                    .bot-window .close {
+                        margin-left: 10px;
+                    }
+
+                    .templates-result {
+                        overflow: auto;
+                        height: 90%;
+                    }
+                    
+                    .template {
+                        background: #4448;
+                        padding: 5px;
+                        position: relative;
+                    }
+                    
+                    .template-top {
+                        margin-top: 0px !important;
+                    }
+                    
+                    .template-name {
+                        font-weight: bold;
+                    }
+
+                    .template-author {
+                        color: #888;
+                    }
+
+                    .template-peek {
+                        color: #bbb;
+                        white-space: nowrap;
+                        text-overflow: ellipsis;
+                        overflow: hidden;
+                    }
+
+                    .bot-temp-apply, .bot-temp-menu {
+                        fill: white;
+                        position: absolute;
+                        cursor: pointer;
+                    }
+                    
+                    .bot-temp-apply {
+                        margin: 0 5px;
+                        right: 0;
+                    }
+
+                    .bot-temp-menu {
+                        left: 0;
+                    }
+
+                    .template-menu {
+                        width: 100px;
+                        left: 0;
+                        top: 10px;
+                        position: absolute;
+                        background: #000a;
+                        z-index: 1;
+                    }
+
+                    .template-option {
+                        margin: 0 !important;
+                        padding: 5px 0;
+                        border-bottom: 1px solid #555;
                     }
 
                     textarea {
@@ -727,6 +1284,7 @@ bot ? bot.stop() : null;
                     .bot--condits-switch {
                         width: 35%;
                         background: #f55 !important;
+                        margin-top: 10px;
                     }
 
                     #botPanel .btn-on {
@@ -1345,8 +1903,8 @@ bot ? bot.stop() : null;
                 }
             },
 
-            export(fileName) {
-                const data = {
+            packData() {
+                return {
                     settings: {
                         boxes: {
                             isLoop: this.isLoop,
@@ -1368,11 +1926,15 @@ bot ? bot.stop() : null;
                     textArr: this.textArr,
                     condArr: this.condArr
                 }
+            },
+
+            export(fileName) {
+                const data = this.packData();
 
                 download(JSON.stringify(data), (fileName ? fileName : this.textArr[0]) + '.json', 'text/plain');
             },
 
-            import(sep, input) {
+            import(sep, input, isJSON = false) {
                 const isPlainText = (typeof input === 'string');
 
                 const splitText = (text) => {
@@ -1384,43 +1946,57 @@ bot ? bot.stop() : null;
                 }
 
                 if (!isPlainText) {
-                    const processFile = (e) => {
-                        const text = e.target.result;
-                        const data = JSON.parse(text);
+                    
+                    const processData = (data) => {
+                        if(!data){
+                            alert('Unable to apply template. Not enough template data.')
+                            return
+                        }
 
                         this.mutateTextArr(data.textArr, 'queue');
                         this.mutateTextArr(data.condArr, 'conds');
                         // if(!data.settings.switches.queue && data.settings.switches.conds){
-                        //     if(!this.isConditsShown){
-                        //         // bot.cp.handleConditsSwitch();
-                        //     }
-                        // }
-
-                        const keys = Object.keys(data.settings.boxes);
-                        const vals = Object.values(data.settings.boxes);
-                        const cp = bot.cp;
-                        
-                        for(let i=0; i<keys.length; i++){
-                            const key = keys[i];
-                            const val = vals[i];
-                            
-                            if(this[key] !== val){
-                                const noIsKey = key.slice(2,3).toLowerCase() + key.slice(3);
+                            //     if(!this.isConditsShown){
+                                //         // bot.cp.handleConditsSwitch();
+                                //     }
+                                // }
+                                
+                                const keys = Object.keys(data.settings.boxes);
+                                const vals = Object.values(data.settings.boxes);
+                                const cp = bot.cp;
+                                
+                                for(let i=0; i<keys.length; i++){
+                                    const key = keys[i];
+                                    const val = vals[i];
+                                    
+                                    if(this[key] !== val){
+                                        const noIsKey = key.slice(2,3).toLowerCase() + key.slice(3);
                                 const box = noIsKey+'Box';
                                 const boxEl = cp[box];
                                 boxEl.click();
                             }
                         }
-
+                        
                         const begin = data.settings.begin;
                         bot.cp.beginInput.value = begin ? begin : '';
-
+                        
                         bot.changeRate(data.settings.rate, false, true);
                         this.setMode(data.settings.mode, true);
-
+                        
                         const switches = data.settings.switches;
                         bot.onOffSpecific('queue', switches.queue);
                         bot.onOffSpecific('conds', switches.conds);
+                    }
+                    
+                    if(isJSON){
+                        processData(input);
+                        return
+                    }
+
+                    const processFile = (e) => {
+                        const text = e.target.result;
+                        const data = JSON.parse(text);
+                        processData(data);
                     }
 
                     if (!window.FileReader) {
