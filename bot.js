@@ -99,6 +99,7 @@ bot ? bot.stop() : null;
                 body.appendChild(sortablejs);
 
                 const backendUrl = 'https://bloonbot.herokuapp.com/';
+                // const backendUrl = 'http://localhost:3003/';
 
                 const constructCond = (ifval, thenval) => {
                     return msg = {
@@ -570,7 +571,6 @@ bot ? bot.stop() : null;
                     const label = makeEl('', labelText, 'span')
                     const input = makeEl('', '', 'input')
                     input.required = required;
-                    // nameInp.name = name;
                     
                     return {
                         input,
@@ -578,21 +578,22 @@ bot ? bot.stop() : null;
                     }
                 }
 
+                const printResultMessage = (resultBox, msg, good = false) => {
+                    resultBox.textContent = msg;
+                    if(!good) resultBox.classList.add('wrong')
+                    else resultBox.classList.remove('wrong')
+                }
+
                 // upload window and button
                 (() => {
                     const nameInputObj = makeInput('Template name: ', true)
-                    const windowContent = makeEl('upload-content', [nameInputObj.container], 'form')
-                    // windowContent.action = backendUrl;
-                    // windowContent.method = 'POST';
+                    const resultMsgBox = makeEl('result-msg');
+                    const windowContent = makeEl('upload-content', [nameInputObj.container, resultMsgBox], 'form')
+
+                    const printResultMsg = printResultMessage.bind(null, resultMsgBox)
                     
                     createBtn('uploadBtn', '', ['bot--btn', 'icon-btn', 'upload-btn'], e => {
-                        if(!e.explicitOriginalTarget.classList.contains('upload-input')){
-                            if(!e.target.closest('.upload-window') && !e.target.closest('.template-menu')){
-                                this.uploadWindow.classList.toggle('off')
-                                if(!this.searchWindow.classList.contains('off')) this.searchWindow.classList.add('off')
-                            }
-                        }
-
+                        handleWindowActions(e, this.uploadWindow, ['.bot-window','.template-menu']);
                     }, 'exportDiv')
 
                     this.uploadBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M16 16h-3v5h-2v-5h-3l4-4 4 4zm3.479-5.908c-.212-3.951-3.473-7.092-7.479-7.092s-7.267 3.141-7.479 7.092c-2.57.463-4.521 2.706-4.521 5.408 0 3.037 2.463 5.5 5.5 5.5h3.5v-2h-3.5c-1.93 0-3.5-1.57-3.5-3.5 0-2.797 2.479-3.833 4.433-3.72-.167-4.218 2.208-6.78 5.567-6.78 3.453 0 5.891 2.797 5.567 6.78 1.745-.046 4.433.751 4.433 3.72 0 1.93-1.57 3.5-3.5 3.5h-3.5v2h3.5c3.037 0 5.5-2.463 5.5-5.5 0-2.702-1.951-4.945-4.521-5.408z"/></svg>'
@@ -604,34 +605,41 @@ bot ? bot.stop() : null;
                     createBtn('closeUpload', 'X', ['bot--btn'], e => {
                         this.uploadWindow.classList.add('off')
                     }, topBar)
-                    
 
                     createBtn('uploadTemp', 'Upload', ['bot--btn', 'upload-temp'], e => {
                         e.preventDefault()
-                        
-                        // const data = new URLSearchParams(new FormData(windowContent));
                         const data = bot.text.packData();
-                        
+                        const tempName = nameInputObj.input.value;
+                        if(!tempName) return printResultMsg('You have to name your template.')
+                        else this.uploadTemp.classList.add('inactive-btn')
+
                         fetch(backendUrl+'templates', {
                             method: 'POST',
+                            credentials: 'include',
                             headers: {
                                 'Content-type': 'application/json'
                             },
                             body: JSON.stringify({
-                                name: nameInputObj.input.value,
-                                author: {
-                                    name: 'adminek'
-                                },
+                                name: tempName,
                                 template: data
                             })
                             })
-                            .then(res => {
-                                return res.json()
+                            .then(async res => {
+                                const data = await res.json()
+                                
+                                this.uploadTemp.classList.remove('inactive-btn')
+                                if(res.ok){
+                                    printResultMsg('Template created!', true)
+                                } else if(data && data.msg){
+                                    printResultMsg(data.msg)
+                                } else {
+                                    printResultMsg('Unknown error')
+                                }
                             })
-                            .then(data => {
-                                console.log(data)
-                            })
-                            .catch(err => console.log(err));
+                            .catch(err => {
+                                this.uploadTemp.classList.remove('inactive-btn')
+                                printResultMsg(err)
+                            });
                     }, windowContent)
                 })();
 
@@ -639,8 +647,9 @@ bot ? bot.stop() : null;
 
                 // search window and button
                 (() => {
-                    const fetchTemplates = () => {
-                        if(!this.searchWindow.classList.contains('off')){
+                    const fetchTemplates = (force = false) => {
+                        if(!this.searchWindow.classList.contains('off') || force){
+                            this.templatesResult.innerHTML = '';
                             this.templatesResult.appendChild(makeEl('bot-loading', 'Loading templates...'))
                             fetch(backendUrl+'templates')
                             .then(res => {
@@ -688,12 +697,9 @@ bot ? bot.stop() : null;
 
                     createBtn('searchBtn', '', ['bot--btn', 'icon-btn', 'search-btn'], e => {
                         e.preventDefault()
-                        // console.log(e.target.closest('.search-window'));
-                        if(!e.target.closest('.search-window') && !e.target.closest('.template-menu')){
-                            if(!this.uploadWindow.classList.contains('off')) this.uploadWindow.classList.add('off')
-                            this.searchWindow.classList.toggle('off')
-                            fetchTemplates()
-                        }
+                        handleWindowActions(e, this.searchWindow, ['.search-window', '.template-menu'], () => {
+                            if(this.searchWindow.classList.contains('off')) fetchTemplates(true)
+                        })
                     }, 'importTop')
 
                     this.searchBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M23.822 20.88l-6.353-6.354c.93-1.465 1.467-3.2 1.467-5.059.001-5.219-4.247-9.467-9.468-9.467s-9.468 4.248-9.468 9.468c0 5.221 4.247 9.469 9.468 9.469 1.768 0 3.421-.487 4.839-1.333l6.396 6.396 3.119-3.12zm-20.294-11.412c0-3.273 2.665-5.938 5.939-5.938 3.275 0 5.94 2.664 5.94 5.938 0 3.275-2.665 5.939-5.94 5.939-3.274 0-5.939-2.664-5.939-5.939z"/></svg>'
@@ -716,8 +722,13 @@ bot ? bot.stop() : null;
                     this.searchWindow.classList.add('search-window', 'bot-window', 'off')
                     this.searchBtn.appendChild(this.searchWindow)
 
+                    const resultMsgBox = makeEl('result-msg')
+                    const printResultMsg = printResultMessage.bind(null, resultMsgBox)
+
                     this.templatesResult.addEventListener('click', e => {
                         const tempEl = e.target.closest('.template')
+                        printResultMsg('')
+                        if(tempEl) tempEl.appendChild(resultMsgBox)
 
                         if(!tempEl) return
                         const tempId = tempEl.dataset.id;
@@ -725,15 +736,19 @@ bot ? bot.stop() : null;
 
                         if(e.target.closest('.bot-temp-apply')){
                             fetch(backendUrl+'templates/' + tempId)
-                            .then(res => {
+                            .then(async res => {
+                                const data = await res.json()
+
                                 if(res.ok){
-                                    return res.json()
+                                    bot.text.import('', data.template, true)
+                                    printResultMsg('Template applied!', true)
+                                } else if (data.msg){
+                                    printResultMsg(data.msg)
                                 } else {
-                                    console.log(res);
+                                    printResultMsg('Cannot apply template - unknown error')
                                 }
-                            })
-                            .then(data => {
-                                bot.text.import('', data.template, true)
+                            }).catch(err => {
+                                printResultMsg(err)
                             })
 
                         } else if(btnEl = e.target.closest('.bot-temp-menu')){
@@ -741,17 +756,21 @@ bot ? bot.stop() : null;
                                 removeMenuWindow()
                                 if(e.target.classList.contains('template-option')){
                                     fetch(backendUrl+'templates/' + tempId, {
-                                        method: 'DELETE'
+                                        method: 'DELETE',
+                                        credentials: 'include'
                                     })
-                                    .then(res => {
+                                    .then(async res => {
+                                        const data = await res.json()
+                                        
                                         if(res.ok){
-                                            return res.json()
+                                            fetchTemplates()
+                                        } else if (data.msg) {
+                                            printResultMsg(data.msg);
                                         } else {
-                                            console.log(res);
+                                            printResultMsg('Cannot delete - unknown error')
                                         }
-                                    })
-                                    .then(data => {
-                                        fetchTemplates()
+                                    }).catch(err => {
+                                        printResultMsg(err)
                                     })
                                 }
                             } else 
@@ -795,31 +814,33 @@ bot ? bot.stop() : null;
                 this.panel.appendChild(this.hideBtn);
 
                 createBtn('sideSwitch', '<|>', ['top-btns', 'bot--btn', 'icon-btn', 'side-switch'], e => {
-                    this.panel.style.setProperty('right', this.position === 'right' ? 'initial' : 0);
-
-                    this.position = (this.position === 'right' ? 'left' : 'right');
+                    this.position = this.panel.classList.toggle('right')
                 }, 'panel')
                 this.sideSwitch.title = 'Change bot position (left/right)';
                 this.sideSwitch.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M6 13v4l-6-5 6-5v4h3v2h-3zm9-2v2h3v4l6-5-6-5v4h-3zm-4-6v14h2v-14h-2z"/></svg>';
-                
+                const logInBtnPath = '<path d="M8 9v-4l8 7-8 7v-4h-8v-6h8zm2-7v2h12v16h-12v2h14v-20h-14z"/>';
+                const userBtnPath = '<path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm7.753 18.305c-.261-.586-.789-.991-1.871-1.241-2.293-.529-4.428-.993-3.393-2.945 3.145-5.942.833-9.119-2.489-9.119-3.388 0-5.644 3.299-2.489 9.119 1.066 1.964-1.148 2.427-3.393 2.945-1.084.25-1.608.658-1.867 1.246-1.405-1.723-2.251-3.919-2.251-6.31 0-5.514 4.486-10 10-10s10 4.486 10 10c0 2.389-.845 4.583-2.247 6.305z"/>';
+
                 // sign in up window
                 (() => {
                     createBtn('userBtn', 'Sign in/Register', ['top-btns', 'bot--btn', 'icon-btn'], e => {
-                        if(!e.target.closest('.bot-window'))
-                            signWindow.classList.toggle('off')
+                        handleWindowActions(e, this[onWindow], '.bot-window')
                     }, 'panel')
+                    
+                    this.userBtn.title = 'Sign in/Register';
+                    this.userBtn.innerHTML = '<svg xmlns="https://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8 9v-4l8 7-8 7v-4h-8v-6h8zm2-7v2h12v16h-12v2h14v-20h-14z"/></svg>';
 
                     const loginObj = makeInput('Login: ', 1)
                     const passObj = makeInput('Password: ', 1)
-                    
-                    this.userBtn.title = 'Sign in/Register';
-                    this.userBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8 9v-4l8 7-8 7v-4h-8v-6h8zm2-7v2h12v16h-12v2h14v-20h-14z"/></svg>';
-                    
+                    passObj.input.type = 'password';
+
                     createBtn('closeSign', 'X', ['bot--btn'], e => {
-                        signWindow.classList.add('off')
+                        this.signWindow.classList.add('off')
                     })
                     
-                    const windowContent = makeEl('', [loginObj.container, passObj.container])
+                    const resultMsgBox = makeEl('result-msg')
+                    const printResultMsg = printResultMessage.bind(null, resultMsgBox)
+                    const windowContent = makeEl('', [loginObj.container, passObj.container, resultMsgBox])
 
                     const signIn = makeEl(['sign-title'], 'Sign in');
                     const signUp = makeEl(['sign-title', 'active'], 'Register');
@@ -827,6 +848,7 @@ bot ? bot.stop() : null;
                     
                     let signSwitchState = 'up';
                     signSwitch.addEventListener('click', e => {
+                        printResultMsg('')
                         signIn.classList.toggle('active')
                         signUp.classList.toggle('active')
 
@@ -839,40 +861,180 @@ bot ? bot.stop() : null;
                         }
                     })
                     const topBar = makeEl('top-bar', [signSwitch, this.closeSign]);
-                    const signWindow = makeEl(['sign-window', 'bot-window'], [topBar, windowContent])
-                    signWindow.title = ''
+                    createParentDiv('signWindow', [topBar, windowContent])
+                    this.signWindow.classList.add('sign-window', 'bot-window')
+                    this.signWindow.title = ''
 
-                    createBtn('signBtn', 'Register', ['bot--btn'], e => {
+                    createBtn('signBtn', 'Register', ['bot--btn', 'sign-btn'], e => {
                         const user = {
                             login: loginObj.input.value,
                             password: passObj.input.value
                         }
+                        if(!user.login || !user.password){
+                            printResultMsg('Please fill in fields.')
+                            return
+                        }
+                        this.signBtn.classList.add('inactive-btn');
 
                         const url = backendUrl + 'users/' + (signSwitchState === 'up' ? 'register' : 'signin');
                         fetch(url, {
                             method: 'POST',
+                            credentials: 'include',
                             headers: {
                                 'Content-type': 'application/json'
                             },
                             body: JSON.stringify(user)
                         })
                         .then(async res => {
-                            // return res.json()
-                            const contentType = res.headers.get("content-type");
+                            // const contentType = res.headers.get("content-type");
+                            // if (contentType && contentType.indexOf("application/json") !== -1) { //register
+                            const data = await res.json();
 
-                            if (contentType && contentType.indexOf("application/json") !== -1) {
-                              const data = await res.json();
-                                console.log(data);
-                            } else if(res.ok){
-                                sessionStorage.setItem('loggedIn', user.login)
+                            if(!res.ok){
+                                printResultMsg(data.msg);
+                            } else {
+                                if(data.login){
+                                    this.user.setLoggedState(data.login)
+                                } else {
+                                    printResultMsg(data.msg, true);
+                                }
                             }
-                        // }).then(data => {
-                            // console.log(data)
-                        }).catch(err => console.log(err));
-                    }, signWindow)
+                            // }
+                            this.signBtn.classList.remove('inactive-btn');
+                        }).catch(err => {
+                            printResultMsg(err);
+                            this.signBtn.classList.remove('inactive-btn');
+                        });
+                    }, this.signWindow)
+
+                    this.userBtn.appendChild(this.signWindow)
+                })();
+
+                let onWindow = 'signWindow';
+                let offWindow = 'userWindow';
+                this.user = {
+                    login: null,
+                    setLoggedState: function(login){
+                        this.login = login;
+                        logInOutAction()
+                    }
+                }
+
+                const logInOutAction = () => {
+                    if(this.user.login){
+                        checkSignWindows()
+                        offWindow = 'signWindow';
+                        onWindow = 'userWindow';
+                        setLoginTitle(this.user.login)
+                        const oldSvg = this.userBtn.querySelector('svg');
+                        oldSvg.innerHTML = userBtnPath;
+                    } else {
+                        checkSignWindows()
+                        onWindow = 'signWindow';
+                        offWindow = 'userWindow';
+                        setLoginTitle('ur not supposed to be here...')
+                        const oldSvg = this.userBtn.querySelector('svg');
+                        oldSvg.innerHTML = logInBtnPath;
+                    }
+                }
+
+                const checkSignWindows = () => {
+                    const isClosed = this[onWindow].classList.contains('off')
+
+                    if(!isClosed){
+                        this[onWindow].classList.add('off')
+                        this[offWindow].classList.remove('off')
+                    }
+                }
+
+                const setLoginTitle = (login) => {
+                    this.loginTitle.innerHTML = '';
+                    this.loginTitle.appendChild(makeEl('', 'Account: ' + login))
+                }
+
+                const authCheck = () => {
+                    fetch(backendUrl + 'users/authorize', {
+                        method: 'POST',
+                        credentials: 'include'
+                    }).then(async res => {
+                        const data = await res.json()
+                        
+                        if(data && data.login){
+                            this.user.setLoggedState(data.login)
+                        }
+                    })
+                };
+
+                authCheck();
+
+                // user window
+                (() => {
+
+                    const resultMsgBox = makeEl('result-msg')
+                    const printResultMsg = printResultMessage.bind(null, resultMsgBox)
+
+                    createBtn('closeUser', 'X', ['bot--btn'], e => {
+                        this.userWindow.classList.add('off')
+                    })
+                    createParentDivAndAppend('loginTitle', [])
+                    const topBar = makeEl('top-bar', [this.loginTitle, this.closeUser]);
                     
-                    this.userBtn.appendChild(signWindow)
+                    createParentDiv('userWindow', [topBar])
+                    this.userWindow.classList.add('sign-window', 'bot-window', 'off')
+                    this.userWindow.title = ''
+                    
+                    createBtn('logoutBtn', 'logout', ['bot--btn', 'sign-btn'], e => {
+                        this.logoutBtn.classList.add('inactive-btn');
+                        const url = backendUrl + 'users/logout'
+                        fetch(url, {
+                            method: 'POST',
+                            credentials: 'include',
+                        })
+                        .then(async res => {
+                            const data = await res.json();
+                            
+                            if(!res.ok){
+                                printResultMsg(data.msg);
+                            } else {
+                                printResultMsg(data.msg, true);
+                                this.user.setLoggedState(null)
+                            }
+                            this.logoutBtn.classList.remove('inactive-btn');
+                        }).catch(err => {
+                            printResultMsg(err);
+                            this.logoutBtn.classList.remove('inactive-btn');
+                        });
+                    }, this.userWindow)
+                    
+                    this.userBtn.appendChild(this.userWindow)
                 })()
+
+                const checkClickBlacklist = (e, blacklist) => { // if anything that is on the blacklist is clicked then dont execute actions (in handleWindowActions)
+                    const isClicked = (item) => e.target.closest(item)
+
+                    if(Array.isArray(blacklist)){
+                        for(let i=0; i<blacklist.length; i++){
+                            if(isClicked(blacklist[i])) return false
+                        }
+                    } else if(isClicked(blacklist)) return false
+
+                    return true
+                }
+
+                let nonSimultaneousWindows = [this.uploadWindow, this.searchWindow];
+                const handleWindowActions = (e, window, clickBlacklist, actions = null) => {
+                    // check blacklist and if event was emitted by a click
+                    if(e.screenX && checkClickBlacklist(e, clickBlacklist)){
+                        if(actions) actions()
+                        const nonSim = nonSimultaneousWindows;
+                        // close any windows that are in 'nonSimultaneousWindows' array
+                        for(let i=0; i<nonSim.length; i++){
+                            if(nonSim[i] !== window && !nonSim[i].classList.contains('off')) nonSim[i].classList.add('off')
+                        }
+                        if(window !== this[onWindow]) this[onWindow].classList.add('off')
+                        return window.classList.toggle('off')
+                    }
+                }
 
                 appendElWithText('title', ['bot--title'], 'BloonBot v' + bot.version, 'panel');
                 // createParentDivAndAppend('mainBar', ['hideBtn', 'sideSwitch', 'userBtn', 'title'], 'panel');
@@ -914,9 +1076,18 @@ bot ? bot.stop() : null;
                         z-index: 1000;
                         position: absolute;
                         width: 450px;
-                        background: #0008;
+                        background: #000a;
                         box-sizing: border-box;
                         font-family: roboto, arial;
+                    }
+
+                    #botPanel.right {
+                        right: 0;
+                    }
+
+                    #botPanel.right .bot-window {
+                        right: 30px;
+                        left: initial;
                     }
 
                     input, textarea {
@@ -964,6 +1135,14 @@ bot ? bot.stop() : null;
                         margin-left: 5px;
                     }
 
+                    .inactive-btn {
+                        background: #666 !important;
+                    }
+
+                    .inactive-btn::after {
+                        content: '...'
+                    }
+
                     .input-container {
                         display: flex;
                         align-items: center;
@@ -977,6 +1156,15 @@ bot ? bot.stop() : null;
                     .input-container input {
                         flex: 1;
                         margin-left: 5px;
+                    }
+
+                    .result-msg {
+                        color: #6f6;
+                        margin-top: 5px;
+                    }
+
+                    .result-msg.wrong {
+                        color: #f66;
                     }
 
                     .form-input-label {
@@ -1171,17 +1359,22 @@ bot ? bot.stop() : null;
 
                     .icon-btn {
                         width: 30px;
+                        height: 30px;
+                        position: relative;
                         display: flex;
                         justify-content: center;
                         align-items: center;
-                        position: relative;
+                    }
+
+                    .icon-btn > svg {
+                        width: 30px;
                     }
 
                     .bot-window {
                         position: absolute;
                         left: 40px;
                         bottom: 30px;
-                        background: #0008;
+                        background: #000c;
                         width: 400px;
                         cursor: auto;
                         padding: 10px;
@@ -1191,6 +1384,7 @@ bot ? bot.stop() : null;
                     .bot-window .top-bar {
                         display: flex;
                         justify-content: space-between;
+                        align-items: center;
                         font-size: 1.2em;
                         font-weight: bold;
                     }
@@ -1232,6 +1426,11 @@ bot ? bot.stop() : null;
                         white-space: nowrap;
                         text-overflow: ellipsis;
                         overflow: hidden;
+                        margin-bottom: 5px;
+                    }
+
+                    .template .result-msg {
+                        margin-top: 0;
                     }
 
                     .bot-temp-apply, .bot-temp-menu {
