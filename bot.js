@@ -35,6 +35,21 @@ bot ? bot.stop() : null;
         }
     }
 
+    const isObjEmpty = (obj) => {
+        return Object.keys(obj).length === 0 && obj.constructor === Object
+    }
+
+    const createSVG = (iconPath) => {
+        const namespaceURI = "http://www.w3.org/2000/svg";
+        const svg = document.createElementNS(namespaceURI, 'svg');
+        const path = document.createElementNS(namespaceURI, 'path');
+        path.setAttributeNS(null, "d", iconPath);
+        svg.setAttributeNS(null, 'viewBox', "0 0 24 24");
+        svg.appendChild(path)
+        svg.classList.add('bot-svg-icon')
+        return svg
+    }
+
     const editBtn = document.createElement('span');
     editBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path d="M18 14.45v6.55h-16v-12h6.743l1.978-2h-10.721v16h20v-10.573l-2 2.023zm1.473-10.615l1.707 1.707-9.281 9.378-2.23.472.512-2.169 9.292-9.388zm-.008-2.835l-11.104 11.216-1.361 5.784 5.898-1.248 11.103-11.218-4.536-4.534z"/></svg>'
     editBtn.classList.add('editBtn', 'queue-icon');
@@ -62,6 +77,7 @@ bot ? bot.stop() : null;
     var bot = {
 
         version: '3.0',
+        devMode: true,
         botInterval: null,
         fakeTypeInterval: null,
         condInterval: null,
@@ -156,11 +172,12 @@ bot ? bot.stop() : null;
 
                     for (let i = 0; i < childEl.length; i++) {
                         const child = childEl[i]
-                        if(typeof child === 'string'){
-                            this[el].appendChild(this[child]);
-                        } else {
-                            this[el].appendChild(child);
-                        }
+                        appendEl(child, el)
+                        // if(typeof child === 'string'){
+                        //     this[el].appendChild(this[child]);
+                        // } else {
+                        //     this[el].appendChild(child);
+                        // }
                     }
 
                     return this[el]
@@ -168,25 +185,32 @@ bot ? bot.stop() : null;
 
                 const createParentDivAndAppend = (el, childEl, parentEl = 'all', elType = 'div') => { //childEl must be an array
                     this[el] = createParentDiv(el, childEl, elType);
-                    this[parentEl].appendChild(this[el]);
-
+                    appendEl(el, parentEl)
+                    // this[parentEl].appendChild(this[el]);
+                    
                     return this[el]
+                }
+
+                const appendChildrenElements = (parentEl, childrenEls) => {
+                    if(!Array.isArray(childrenEls)) 
+                        parentEl.appendChild(childrenEls)
+                    else {
+                        for (let i = 0; i < childrenEls.length; i++) {
+                            const child = childrenEls[i]
+                            if(child) parentEl.appendChild(child)
+                        }
+                    }
                 }
 
                 const makeEl = (classes = [], childElsOrText = '', elType = 'div') => {
                     el = document.createElement(elType)
                     
                     if(childElsOrText){
-                        if(typeof childElsOrText === 'string')
-                            el.appendChild(document.createTextNode(childElsOrText));
-                        else {
-                            if(!Array.isArray(childElsOrText)) el.appendChild(childElsOrText)
-                            else {
-                                for (let i = 0; i < childElsOrText.length; i++) {
-                                    const child = childElsOrText[i]
-                                    el.appendChild(child)
-                                }
-                            }
+                        if(typeof childElsOrText === 'string'){
+                            if(elType !== 'input') el.appendChild(document.createTextNode(childElsOrText));
+                            else el.value = childElsOrText;
+                        } else {
+                            appendChildrenElements(el, childElsOrText)
                         }
                     }
 
@@ -196,32 +220,52 @@ bot ? bot.stop() : null;
                     return el
                 }
 
-                const createCheckbox = (parentEl, el, setFunction, label, checked = false, disabled = false, fn) => {
+                const createCheckbox = (parentEl, el, setFunction, label, title, checked = false, disabled = false, fn) => {
                     this[el] = document.createElement('input');
                     this[el].type = 'checkbox';
                     this[el].checked = checked;
                     this[el].disabled = disabled;
                     this[el].addEventListener('change', e => {
                         const chked = e.target.checked;
-                        bot.text[setFunction](chked);
+                        if(setFunction) bot.text[setFunction](chked);
                         if (fn) fn(chked)
                     });
-
-                    createParentDivAndAppend(parentEl, [el], 'all', 'label');
-                    this[parentEl].appendChild(document.createTextNode(label));
+                    
+                    const labelEl = createParentDivAndAppend(parentEl, [el], 'options', 'label');
+                    labelEl.title = title;
+                    appendEl(document.createTextNode(label), parentEl)
                 }
 
-                const createBtn = (btn, text, classes, clickFn, parentEl = 'all') => {
-                    this[btn] = document.createElement('button');
-                    // this[btn].type = 'button';
-                    addIdAndClasses(this[btn], null, classes);
-                    this[btn].appendChild(document.createTextNode(text));
-                    this[btn].addEventListener('click', clickFn);
+                const elThis = (el) => {
+                    if(typeof el === 'string') return this[el]
+                    return el
+                }
+                const appendEl = (el, parentEl) => { // tests both el and parentEl for being string
+                    elThis(parentEl).appendChild(elThis(el))
+                }
 
-                    if(typeof parentEl === 'string')
-                        this[parentEl].appendChild(this[btn]);
-                    else
-                        parentEl.appendChild(this[btn])
+                const createBtn = (btn, content, classes, clickFn, parentEl = 'all') => {
+                    const btnEl = document.createElement('button');
+                    btnEl.classList.add(...classes);
+
+                    if(typeof content === 'string'){
+                        btnEl.appendChild(document.createTextNode(content));
+                    } else {
+                        if(content.iconPath){
+                            const svg = createSVG(content.iconPath)
+                            btnEl.appendChild(svg);
+                        }
+                        if(content.text) btnEl.appendChild(document.createTextNode(content.text));
+                    }
+                    
+                    btnEl.onclick = clickFn;
+
+                    if(parentEl)
+                        appendEl(btnEl, parentEl)
+                    
+                    if(btn) this[btn] = btnEl; 
+
+                    return btnEl
                 }
 
                 const createRange = (parentEl, parentElId, label, labelText, controller, controllerId, min, max, value, step, fn) => {
@@ -237,37 +281,47 @@ bot ? bot.stop() : null;
                     this[controller].step = step;
                     this[controller].addEventListener('input', fn);
 
-                    createParentDivAndAppend(parentEl, [label, controller])
+                    createParentDiv(parentEl, [label, controller])
                     this.rate.id = parentElId;
+                    return parentEl
                 }
-
-                const appendElWithText = (el, classes, text = 'none', parentEl = 'all', elType = 'div') => {
-                    this[el] = document.createElement(elType);
-                    this[el].classList.add(...classes);
-                    const textEl = document.createTextNode(text);
-
-                    this[el].appendChild(textEl);
-                    this[parentEl].appendChild(this[el]);
-
-                    return this[el]
-                }
-
+                
                 createBtn('hideBtn', 'HIDE', ['bot--btn', 'bot--hide-btn'],
-                    e => {
-                        this.toggleHide();
-                    });
+                e => {
+                    this.toggleHide();
+                });
+                
+                let warningScreen = null;
+                this.showAlert = (msg, { okBtnText: okBtnText = 'Ok', cancelBtnText: cancelBtnText = 'Cancel', onConfirm: onConfirm = null, okOnly: okOnly = false } = {}) => {
+                    if(!msg) return
+                    if(warningScreen) warningScreen.remove()
 
-                // body.addEventListener("keydown", e => {
-                //     if (e.key === 'h') {
-                //         this.toggleHide();
-                //     }
-                // });
+                    const info = makeEl('warning-info', msg)
+                    const okBtn = makeEl(['warning-ok', 'bot--btn'], okBtnText);
+                    okBtn.addEventListener('click', e => {
+                        warningScreen.remove()
+                        if(onConfirm) onConfirm(e)
+                    })
 
-                this.panel = document.createElement('div');
+                    let cancelBtn = null;
+                    if(!okOnly){
+                        cancelBtn = makeEl(['warning-cancel', 'bot--btn'], cancelBtnText);
+                        cancelBtn.addEventListener('click', e => {
+                            warningScreen.remove()
+                        })
+                    }
+                    const btns = makeEl('warning-btns', [okBtn, cancelBtn])
+
+                    warningScreen = makeEl('warning-screen', [info, btns])
+                    this.panel.appendChild(warningScreen)
+                }
+
+                this.panel = makeEl();
                 this.panel.id = 'botPanel';
 
-                this.onOffSwitches = document.createElement('div');
-                this.onOffSwitches.classList.add('onOffSwitches');
+                this.onOffSwitches = makeEl('onOffSwitches');
+
+                this.all.appendChild(this.onOffSwitches);
 
                 createBtn('btn', 'ON/OFF', ['bot--btn', 'bot--switch'],
                     e => {
@@ -282,41 +336,105 @@ bot ? bot.stop() : null;
                         bot.onOffSpecific('conds');
                     }, 'onOffSwitches');
 
-                this.all.appendChild(this.onOffSwitches);
+                const sections = [];
+                const makeSection = (label, children) => {
+                    return new Promise((resolve, reject) => {
+                        setTimeout(() => {
+                            let visibilitySwitch = null;
+                            if(label){                            
+                                visibilitySwitch = createBtn(null, {iconPath: 'M21 12l-18 12v-24z', text: label}, ['hide-section-btn'],
+                                (e) => {
+                                    const sectionContainer = e.target.closest('.section-container');
+                                    const isHidden = !sectionContainer.classList.toggle('off');
+                                    visibilitySwitch.title = (isHidden ? 'Hide this section' : 'Show this section')
+                                }, null)
+                                visibilitySwitch.title = 'Hide this section';
+                            }
+                            const sectionContent = makeEl('section-content', children);
+                            const section = makeEl(['section-container', (label ? 'with-border' : 'no-border')], [visibilitySwitch, sectionContent], 'section');
+                            sections.push(section);
 
-                createCheckbox('loopDiv', 'loopBox', 'setLoop', 'Loop/Repeat ', true);
-                createCheckbox('replyDiv', 'replyBox', 'setReply', 'Reply Mode ', false, false, (chked) => {
+                            resolve(section);
+                        }, 0);
+                    })
+                }
+
+                const makeAndAppendSection = async (label, ...children) => {
+                    const section = await makeSection(label, children);
+                    this.all.appendChild(section);
+                    return section
+                }
+
+                const makeSwitch = ({ flickTexts: [ text1='1', text2='2' ], classes = [], onSwitch = ()=>{} }) => {
+                    const flick1 = makeEl(['bot-flick', 'active'], text2);
+                    const flick2 = makeEl(['bot-flick'], text1);
+                    const switchContainer = makeEl([...classes, 'bot--container', 'bot-switch'], [flick1, flick2]);
+                    
+                    switchContainer.addEventListener('click', e => {
+                        const classList = e.target.classList;
+                        if(!classList.contains('active') && classList.contains('bot-flick')){
+                            const state = flick1.classList.toggle('active')
+                            flick2.classList.toggle('active')
+
+                            onSwitch(state)
+                        }
+                    })
+                    return switchContainer
+                }
+
+                setTimeout(() => {
+                    makeAndAppendSection('Chat starting & ending', this.btnAutoNext, this.beginDiv);
+                    makeAndAppendSection('Text messages', this.conditsSwitch, this.listForm, this.condForm);
+                    makeAndAppendSection('Message sending options', this.options, this.rate);
+                    makeAndAppendSection('Exporting & importing', this.expImp);
+                    makeAndAppendSection(null, this.updateToolbar);
+                }, 0);
+
+                const closeWarning = makeEl('bot-close-warning', 'x', 'span');
+                closeWarning.addEventListener('click', e => {
+                    e.target.parentElement.classList.add('closed')
+                })
+                const warning = makeEl('bot-warning', [
+                    makeEl(null, 'Settings in this section affect ONLY queue', 'span'),
+                    closeWarning
+                ])
+                this.options = makeEl('bot-options', warning)
+
+                createCheckbox('loopDiv', 'loopBox', 'setLoop', 'Loop/Repeat ', 'When last message in queue is send, then start from the beginning of queue. \n If random is checked, repeated messages will be allowed.', true);
+                createCheckbox('replyDiv', 'replyBox', 'setReply', 'Reply Mode ', 'Bot will send a message only when other chatter sends a message', false, false, (chked) => {
                     this.replyAllDiv.classList.toggle('unactive');
                     this.replyAllBox.disabled = !chked;
                 });
-                createCheckbox('replyAllDiv', 'replyAllBox', 'setReplyAll', 'Send whole queue', false, true);
-                addIdAndClasses(this.replyAllDiv, null, ['bot--box-l2', 'unactive']);
-                createCheckbox('randomDiv', 'randomBox', 'setRandom', 'Random');
-                createCheckbox('realTypeDiv', 'realTypeBox', 'setRealType', 'Real Type™');
-                createCheckbox('fakeTypeDiv', 'fakeTypeBox', 'setFakeType', 'Fake Typing');
+                createCheckbox('replyAllDiv', 'replyAllBox', 'setReplyAll', 'Send whole queue', 'When replying bot will send entire queue at once', false, true);
+                this.replyAllDiv.classList.add('bot--box-l2', 'unactive');
+                createCheckbox('randomDiv', 'randomBox', 'setRandom', 'Random', 'Messages from queue will be chosen randomly');
+                createCheckbox('realTypeDiv', 'realTypeBox', 'setRealType', 'Real Type™', 'Bot will try to imitate typing of real human - longer messages will take longer to send');
+                createCheckbox('fakeTypeDiv', 'fakeTypeBox', 'setFakeType', 'Fake Typing', 'Bot will imitate typing - useful when your chatting website shows when other chatter is typing something');
 
-                createRange('rate', 'bot--rate', 'rateText', 'Send once/<span id="bot--rate-gauge">' + bot.rate + 'ms</span>', 'rateController', 'bot--rate-controller', 0, 10000, bot.rate, 1,
+                createRange('rate', 'bot--rate', 'rateText', 'Send once/', 'rateController', 'bot--rate-controller', 0, 10000, bot.rate, 1,
                     e => {
                         let rate = e.target.value;
                         bot.changeRate(rate);
-                    });
-                setTimeout(() => this.rateGauge = document.querySelector('#bot--rate-gauge'), 0);
-
+                    }
+                );
+                this.rateGauge = makeEl(null, bot.rate + 'ms', 'span');
+                this.rateGauge.id = "bot--rate-gauge";
+                this.rateText.appendChild(this.rateGauge)
+                
+                // setTimeout(() => this.rateGauge = document.querySelector('#bot--rate-gauge'), 100);
+                
                 createBtn('btnAutoNext', 'Auto Next', ['bot--btn', 'bot--auto-next'],
                     e => {
                         bot.toggleAutoNext();
-                    });
+                    }, null);
                 this.btnAutoNext.title = 'If enabled, bot will automatically start another chat when other chatter disconnects.';
                 // ################################################################################################
-                createBtn('conditsSwitch', 'conditionals >', ['bot--condits-switch', 'bot--btn'], this.handleConditsSwitch.bind(this));
-
-                appendElWithText('beginLabel', ['begin-label'], 'Start chat with: ', 'all', 'span');
-                this.beginInput = document.createElement('input');
-                this.beginInput.classList.add('begin');
+                
+                this.beginLabel = makeEl('begin-label', 'Start chat with: ', 'span')
+                this.beginInput = makeEl('begin', null, 'input')
                 this.beginInput.placeholder = 'Message';
-                createParentDivAndAppend('beginDiv', ['beginLabel', 'beginInput'])
-                this.beginDiv.classList.add('begin-div');
-
+                this.beginDiv = makeEl(['begin-div', 'input-container'], [this.beginLabel, this.beginInput])
+                
                 const createSelect = (parentDiv, parentClasses, select, optionsArr, label, selectFn) => {
                     this[parentDiv] = document.createElement('div');
                     this[parentDiv].classList.add(...parentClasses);
@@ -336,9 +454,15 @@ bot ? bot.stop() : null;
                 }
 
                 //##############################################################################################################################
-
-                createParentDivAndAppend('tempCondForm', ['conditsSwitch']);
-                addIdAndClasses(this.tempCondForm, null, ['bot--container']);
+                this.conditsSwitch = makeSwitch({
+                    flickTexts: ['Conditionals', 'Queue'],
+                    classes: ['bot-condits-switch'],
+                    onSwitch: (state) => {
+                        this.listForm.classList.toggle('unactive-form');
+                        this.condForm.classList.toggle('unactive-form');
+                        bot.text.toggleCondits(state)
+                    }
+                })
 
                 this.condIfInput = document.createElement('input');
                 this.condIfInput.placeholder = 'can be RegEx (eg. /regex/)';
@@ -348,11 +472,6 @@ bot ? bot.stop() : null;
                 this.condThenInput.required = true;
                 this.condThenLabel = document.createTextNode('THEN: ');
 
-                createSelect('condTemplates', ['bot--cond-templates'], 'selectCondTemplate', ['NONE', 'fake k/m17'], 'Template ', e => {
-                    bot.text.setTemplate(e.target.value);
-                });
-                createParentDivAndAppend('condTemplatesDiv', ['condTemplates']);
-                this.condTemplatesDiv.classList.add('templates-modes-div');
                 createParentDivAndAppend('condIfDiv', ['condIfLabel', 'condIfInput']);
                 createParentDivAndAppend('condThenDiv', ['condThenLabel', 'condThenInput']);
 
@@ -367,18 +486,15 @@ bot ? bot.stop() : null;
                 sub.type = 'submit';
                 sub.classList.add('necessary_submit');
 
-                createParentDivAndAppend('condControl', ['condIfDiv', 'condThenDiv', 'removeCondsBtn', sub]);
-                this.condControl.classList.add('bot--list-control');
+                this.condControl = makeEl(['bot--list-control', 'cond-control'], [this.condIfDiv, this.condThenDiv, this.removeCondsBtn, sub])
 
                 this.condList = document.createElement('div');
                 this.condList.classList.add('bot--list');
                 this.condList.addEventListener('mouseup', e => {
                     handleBtns(e.target);
-                    // if(e.target.closest('.bot-remove'))
-                    //     bot.text.removeMessage(e.target.closest('.bot--queue-item').dataset.id);
                 });
 
-                createParentDivAndAppend('condForm', ['condTemplatesDiv', 'condControl', 'condList'], 'all', 'form');
+                createParentDivAndAppend('condForm', ['condControl', 'condList'], 'all', 'form');
                 this.condForm.classList.add('cond-form', 'unactive-form');
                 
                 this.condForm.addEventListener('submit', e => {
@@ -496,11 +612,8 @@ bot ? bot.stop() : null;
                 createSelect('modes', ['bot--modes'], 'selectMode', ['NONE', 'increment', 'parrot'], 'Mode ', e => {
                     bot.text.setMode(e.target.value);
                 });
-                createSelect('templates', ['bot--templates'], 'select', ['NONE', 'waves', 'Bałkanica'], 'Template ', e => {
-                    bot.text.setTemplate(e.target.value);
-                });
 
-                createParentDivAndAppend('templatesModesDiv', ['modes', 'templates']);
+                createParentDivAndAppend('templatesModesDiv', ['modes']);
                 this.templatesModesDiv.classList.add('templates-modes-div');
 
                 createParentDivAndAppend('listForm', ['templatesModesDiv', 'upperDiv', 'list'], 'all', 'form')
@@ -523,6 +636,8 @@ bot ? bot.stop() : null;
                 }
 
                 this.expImp = document.createElement('div');
+                this.expImp.classList.add('bot--expimp');
+
                 this.exportDiv = document.createElement('div');
 
                 this.importDiv = document.createElement('form');
@@ -534,19 +649,18 @@ bot ? bot.stop() : null;
                     e.preventDefault();
                     imp();
                 });
-                this.expImp.classList.add('bot--expimp');
                 createBtn('exportBtn', '< Export >', ['bot--btn', 'bot--export'],
                 e => {
                     const name = this.expName.value;
                     bot.text.export(name);
                 }, 'exportDiv');
-                this.exportBtn.title = 'Export to file.';
+                this.exportBtn.title = 'Download template file';
                 
                 createBtn('importBtn', '> Import <', ['bot--btn', 'bot--import'],
                 e => {
                     // imp();
                 }, 'importTop');
-                this.importBtn.title = 'Import from text or file.';
+                this.importBtn.title = 'Import from text or file';
                 
                 this.expName = document.createElement('input');
                 this.expName.placeholder = 'file name';
@@ -555,7 +669,7 @@ bot ? bot.stop() : null;
                 this.impSeparation = document.createElement('input');
                 this.impSeparation.placeholder = 'sep.';
                 this.impSeparation.id = 'bot--impSep';
-                this.impSeparation.title = '(ONLY for importing text) Separation - eg. "," will split "i, like, pepper" to messages "i", "like" and "pepper"';
+                this.impSeparation.title = 'Separation (ONLY for importing text) - for example separator "," will split "i, like, pepper" to messages in queue "i", "like" and "pepper"';
                 
                 this.importFile = document.createElement('input');
                 this.importFile.classList.add('import-file');
@@ -579,6 +693,13 @@ bot ? bot.stop() : null;
                 }
 
                 const printResultMessage = (resultBox, msg, good = false) => {
+                    if(!resultBox.classList.contains('result-msg')){
+                        const resultBoxToAppend = makeEl('result-msg');
+                        resultBox.appendChild(resultBoxToAppend);
+
+                        resultBox = resultBoxToAppend;
+                    }
+
                     resultBox.textContent = msg;
                     if(!good) resultBox.classList.add('wrong')
                     else resultBox.classList.remove('wrong')
@@ -586,9 +707,19 @@ bot ? bot.stop() : null;
 
                 // upload window and button
                 (() => {
+                    this.uploadSettings = {
+                        private: false
+                    };
+
                     const nameInputObj = makeInput('Template name: ', true)
                     const resultMsgBox = makeEl('result-msg');
-                    const windowContent = makeEl('upload-content', [nameInputObj.container, resultMsgBox], 'form')
+
+                    const privateLabel = makeEl('private-div', [], 'label');
+                    createCheckbox(privateLabel, 'privateBox', null, 'Private', 'Only You will be able to see this template', false, false, (checked) => { 
+                        this.uploadSettings.private = checked;
+                    })
+
+                    const windowContent = makeEl('upload-content', [nameInputObj.container, privateLabel, resultMsgBox], 'form')
 
                     const printResultMsg = printResultMessage.bind(null, resultMsgBox)
                     
@@ -606,27 +737,19 @@ bot ? bot.stop() : null;
                         this.uploadWindow.classList.add('off')
                     }, topBar)
 
-                    createBtn('uploadTemp', 'Upload', ['bot--btn', 'upload-temp'], e => {
-                        e.preventDefault()
-                        const data = bot.text.packData();
-                        const tempName = nameInputObj.input.value;
-                        if(!tempName) return printResultMsg('You have to name your template.')
-                        else this.uploadTemp.classList.add('inactive-btn')
-
+                    this.uploadTemplate = (body, isInUploadWindow = true) => {
                         fetch(backendUrl+'templates', {
                             method: 'POST',
                             credentials: 'include',
                             headers: {
                                 'Content-type': 'application/json'
                             },
-                            body: JSON.stringify({
-                                name: tempName,
-                                template: data
-                            })
-                            })
-                            .then(async res => {
-                                const data = await res.json()
-                                
+                            body: JSON.stringify(body)
+                        })
+                        .then(async res => {
+                            const data = await res.json()
+                            
+                            if(isInUploadWindow){
                                 this.uploadTemp.classList.remove('inactive-btn')
                                 if(res.ok){
                                     printResultMsg('Template created!', true)
@@ -635,45 +758,75 @@ bot ? bot.stop() : null;
                                 } else {
                                     printResultMsg('Unknown error')
                                 }
-                            })
-                            .catch(err => {
+                            }
+                        })
+                        .catch(err => {
+                            if(isInUploadWindow){
                                 this.uploadTemp.classList.remove('inactive-btn')
                                 printResultMsg(err)
-                            });
+                            }
+                        });
+                    }
+
+                    createBtn('uploadTemp', 'Upload', ['bot--btn', 'upload-temp'], e => {
+                        e.preventDefault();
+                        const data = bot.text.packData();
+                        const tempName = nameInputObj.input.value;
+                        if(!tempName) return printResultMsg('You have to name your template.');
+                        else this.uploadTemp.classList.add('inactive-btn');
+
+                        this.uploadTemplate({
+                            name: tempName,
+                            private: this.uploadSettings.private,
+                            template: data
+                        })
                     }, windowContent)
+                    
                 })();
 
                 ///////////////////////////////////////////////////////////////////
 
                 // search window and button
                 (() => {
-                    const fetchTemplates = (force = false) => {
+                    this.searchParams = {}
+                    this.editSearchParams = (params) => {
+                        if(params.myTemplates){
+                            if(params.myTemplates === 'toggle'){
+                                const myTemplates = !this.myTemplates.classList.toggle('disabled-btn')
+                                params.myTemplates = myTemplates ? 1 : 0;
+                            } else if(params.myTemplates){
+                                this.myTemplates.classList.remove('disabled-btn')
+                            } else {
+                                this.myTemplates.classList.add('disabled-btn')
+                            }
+                        }
+
+                        this.searchParams = {
+                            ...this.searchParams,
+                            ...params
+                        }
+                    } 
+
+                    this.fetchTemplates = (force = false) => {
                         if(!this.searchWindow.classList.contains('off') || force){
                             this.templatesResult.innerHTML = '';
                             this.templatesResult.appendChild(makeEl('bot-loading', 'Loading templates...'))
-                            fetch(backendUrl+'templates')
-                            .then(res => {
-                                if(res.ok){
-                                    return res.json()
-                                } else {
-                                    console.log(res);
-                                }
-                            })
-                            .then(data => {
-                                this.templatesResult.innerHTML = '';
-                                const frag = document.createDocumentFragment();
 
-                                for(item of data){
+                            const createTemplate = (item, frag) => {
+                                if(item){ 
                                     const templatePeek = makeEl('template-peek')
-                                    const tempName = makeEl('template-name', '', 'span')
+                                    const tempName = makeEl('template-name', '', 'div')
                                     const name = item.name;
-                                    tempName.textContent = name ? name : 'unknown';
-                                    const tempAuthor = makeEl('template-author', (' by ' + (item.author ? item.author.name : 'unknown')), 'span')
+                                    
+                                    tempName.textContent = (name ? name : 'unknown');
+                                    
+                                    const tempAuthor = makeEl('template-author', (' by ' + (item.author ? item.author.name : 'unknown')), 'span');
+                                    const timeSinceCreated = makeEl('template-author', ', '+item.timestamp, 'span');
                                     // there might be a problem if there is author object but no author.NAME in it
                                     if(item.template){
                                         const textArr = item.template.textArr;
                                         let peekString = textArr[0];
-
+                                        
                                         for(let i=1; i<textArr.length; i++){
                                             if(i>5) break;
                                             const item = textArr[i];
@@ -684,22 +837,57 @@ bot ? bot.stop() : null;
                                         templatePeek.appendChild(peekString)
                                     }
                                     
-                                    const templateTop = makeEl('template-top', [menuBtn.cloneNode(true), tempName, tempAuthor, applyBtn.cloneNode(true)])
+                                    const menu = (this.user.login === item.author.name || this.user.permissions === 'all') 
+                                    ? menuBtn.cloneNode(true) : null;
+                                    
+                                    const templateTop = makeEl('template-top', [menu, tempName, tempAuthor, timeSinceCreated, applyBtn.cloneNode(true)])
                                     const template = makeEl('template', [templateTop, templatePeek]);
+                                    if(item.private){
+                                        let privSvg = createSVG("M18 10v-4c0-3.313-2.687-6-6-6s-6 2.687-6 6v4h-3v14h18v-14h-3zm-10 0v-4c0-2.206 1.794-4 4-4s4 1.794 4 4v4h-8z")
+                                        
+                                        tempName.appendChild(privSvg)
+                                        template.classList.add('private')
+                                    }
                                     template.dataset.id = item._id;
                                     frag.appendChild(template);
                                 }
+                            }
+
+                            const url = new URL(backendUrl+'templates')
+                            if(!isObjEmpty(this.searchParams)){
+                                url.search = new URLSearchParams(this.searchParams).toString()
+                            }
+                            fetch(url, {
+                                credentials: 'include'
+                            })
+                            .then(async res => {
+                                const data = await res.json()
+
+                                this.templatesResult.innerHTML = '';
+                                const frag = document.createDocumentFragment();
+                                
+                                if(!data.length){
+                                    const noData = makeEl('bot-no-data', 'Nothing in here, but You can change it :)')
+                                    frag.appendChild(noData)
+                                } else {
+                                    for(item of data){
+                                        createTemplate(item, frag)
+                                    }
+                                }
 
                                 this.templatesResult.appendChild(frag)
-                            });
+                            }).catch(err => {
+                                this.templatesResult.innerHTML = '';
+                                printResultMessage(this.templatesResult, err)
+                            })
                         }
                     }
 
                     createBtn('searchBtn', '', ['bot--btn', 'icon-btn', 'search-btn'], e => {
                         e.preventDefault()
-                        handleWindowActions(e, this.searchWindow, ['.search-window', '.template-menu'], () => {
-                            if(this.searchWindow.classList.contains('off')) fetchTemplates(true)
-                        })
+                        const isWindowVisible = handleWindowActions(e, this.searchWindow, ['.search-window', '.template-menu'])
+
+                        if(isWindowVisible) this.fetchTemplates()
                     }, 'importTop')
 
                     this.searchBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M23.822 20.88l-6.353-6.354c.93-1.465 1.467-3.2 1.467-5.059.001-5.219-4.247-9.467-9.468-9.467s-9.468 4.248-9.468 9.468c0 5.221 4.247 9.469 9.468 9.469 1.768 0 3.421-.487 4.839-1.333l6.396 6.396 3.119-3.12zm-20.294-11.412c0-3.273 2.665-5.938 5.939-5.938 3.275 0 5.94 2.664 5.94 5.938 0 3.275-2.665 5.939-5.94 5.939-3.274 0-5.939-2.664-5.939-5.939z"/></svg>'
@@ -707,19 +895,28 @@ bot ? bot.stop() : null;
                     const topBar = createParentDivAndAppend('topBar', [])
                     topBar.classList.add('top-bar')
 
+                    createBtn('myTemplates', 'My templates', ['bot--btn', 'disabled-btn', 'bot-unshown'], e => {
+                        this.editSearchParams({ myTemplates: 'toggle' })
+                        this.fetchTemplates()
+                    })
+                    const filtersBar = makeEl('top-bar', [this.myTemplates])
+
                     const search = createParentDivAndAppend('search', [], 'topBar', 'input') // search bar
                     search.placeholder = 'Search for templates...'
+                    search.addEventListener('input', e => {
+                        this.editSearchParams({
+                            search: search.value
+                        })
+                        this.fetchTemplates()
+                    })
+
                     createBtn('searchClose', 'X', ['close', 'bot--btn'], e => {
                         this.searchWindow.classList.add('off')
                     }, 'topBar')
-                    createParentDivAndAppend('searchWindow', ['topBar'])
-                    createParentDivAndAppend('templatesResult', [], 'searchWindow')
-                    this.templatesResult.classList.add('templates-result')
-                    const loadingTemplates = makeEl('bot-loading', 'Loading templates...')
-                    this.templatesResult.appendChild(loadingTemplates)
-                    fetchTemplates()
 
-                    this.searchWindow.classList.add('search-window', 'bot-window', 'off')
+                    const loadingTemplates = makeEl('bot-loading', 'Loading templates...')
+                    this.templatesResult = makeEl('templates-result', [loadingTemplates])
+                    this.searchWindow = makeEl(['search-window', 'bot-window', 'off'], [this.topBar, filtersBar, this.templatesResult])
                     this.searchBtn.appendChild(this.searchWindow)
 
                     const resultMsgBox = makeEl('result-msg')
@@ -735,35 +932,20 @@ bot ? bot.stop() : null;
                         let btnEl;
 
                         if(e.target.closest('.bot-temp-apply')){
-                            fetch(backendUrl+'templates/' + tempId)
-                            .then(async res => {
-                                const data = await res.json()
-
-                                if(res.ok){
-                                    bot.text.import('', data.template, true)
-                                    printResultMsg('Template applied!', true)
-                                } else if (data.msg){
-                                    printResultMsg(data.msg)
-                                } else {
-                                    printResultMsg('Cannot apply template - unknown error')
-                                }
-                            }).catch(err => {
-                                printResultMsg(err)
-                            })
+                            applyTemplate(tempId)
 
                         } else if(btnEl = e.target.closest('.bot-temp-menu')){
                             if(e.target.closest('.template-menu')){
                                 removeMenuWindow()
-                                if(e.target.classList.contains('template-option')){
+                                if(e.target.classList.contains('option-delete')){
                                     fetch(backendUrl+'templates/' + tempId, {
                                         method: 'DELETE',
                                         credentials: 'include'
-                                    })
-                                    .then(async res => {
+                                    }).then(async res => {
                                         const data = await res.json()
                                         
                                         if(res.ok){
-                                            fetchTemplates()
+                                            this.fetchTemplates()
                                         } else if (data.msg) {
                                             printResultMsg(data.msg);
                                         } else {
@@ -772,30 +954,164 @@ bot ? bot.stop() : null;
                                     }).catch(err => {
                                         printResultMsg(err)
                                     })
+                                } else if(e.target.classList.contains('option-edit')){
+                                    this.updateTemplate('init', {
+                                        el: tempEl,
+                                        id: tempId
+                                    })
                                 }
+                                oldTempId = false;
                             } else 
                                 createMenuWindow(btnEl, tempId)
                         }
                     })
                     
-                    let tempMenu = '';
-                    let oldTempId = '';
-                    const removeMenuWindow = () => {if(tempMenu) tempMenu.remove()}
+                    const applyTemplate = (tempId) => {
+                        return new Promise((resolve, reject) => {
+                            fetch(backendUrl+'templates/' + tempId)
+                            .then(async res => {
+                                const data = await res.json()
+    
+                                if(res.ok){
+                                    bot.text.import('', data.template, true)
+                                    printResultMsg('Template applied!', true)
+                                    resolve('success')
+                                } else {
+                                    if (data.msg) printResultMsg(data.msg)
+                                    else printResultMsg('Cannot apply template - unknown error')
+                                    reject('wrong')
+                                }
+                            }).catch(err => {
+                                printResultMsg(err)
+                                reject(err)
+                            })
+                        })
+                    }
+
+                    this.updateTemplate = (mode, template = this.user.updatingTemplate) => {
+                        if(template) {
+                            let body = { mode };
+                            let applyPromise;
+                            const tempId = template.id || template._id;
+                            if(mode === 'init'){
+                                this.postAutoSave();
+                                this.makeTemporarySave();
+                                applyPromise = applyTemplate(tempId);
+                            }
+                            else if (mode === 'save'){
+                                tempData = bot.text.packData();
+                                
+                                body = {
+                                    ...body,
+                                    template: tempData,
+                                    private: this.privateSwitch.classList.contains('true'),
+                                    name: this.tempUpdatingName.value
+                                };
+                                
+                                setTimeout(_ => this.fetchTemplates(), 1000);
+                            }
+
+                            fetch(backendUrl+'templates/'+tempId, {
+                                    method: 'PUT',
+                                    credentials: 'include',
+                                    headers: {
+                                        'Content-type': 'application/json'
+                                    },
+                                    body: JSON.stringify(body)
+                                }).then(async res => {
+                                    Promise.all([res.json(), applyPromise])
+                                        .then((vals) => {
+                                            const data = vals[0];
+                                            
+                                            if(mode === 'init'){
+                                                if(data && data.name){
+                                                    this.user.setUpdating(data)
+                                                    printResultMsg('Updating '+data.name, true)
+                                                } else {
+                                                    const msg = data.msg || 'Unknown error';
+                                                    printResultMsg(msg)
+                                                }
+                                            } else if (mode === 'cancel' || mode === 'save'){
+                                                this.updateCancel.classList.remove('inactive-btn')
+                                                this.updateSave.classList.remove('inactive-btn')
+                                                this.user.setUpdating(null);
+                                                this.applyTemporarySave();
+                                                
+                                                const msg = data.msg || 'Updating cancelled';
+                                                printResultMsg(msg, true)
+                                            }
+                                        }).catch(err => {
+                                            this.user.setUpdating(null);
+                                            printResultMsg(err)
+                                        })
+                                    }).catch(err => {
+                                        this.user.setUpdating(null);
+                                        printResultMsg(err)
+                                    })
+                        }
+                    }
+
+                    (() => {
+                        const tempUpdatingLabel = makeEl('temp-update-label', 'Updating template:')
+                        this.tempUpdatingName = makeEl('temp-update-name', '-', 'input')
+
+                        this.privateSwitch = createSVG("M18 10v-4c0-3.313-2.687-6-6-6s-6 2.687-6 6v4h-3v14h18v-14h-3zm-10 0v-4c0-2.206 1.794-4 4-4s4 1.794 4 4v4h-8z");
+                        this.privateSwitch.classList.add('private-switch');
+
+                        const tempUpdatingEditables = makeEl('temp-updating-editables', [this.privateSwitch, this.tempUpdatingName])
+                        tempUpdatingEditables.addEventListener('click', e => {
+                            const target = e.target;
+                            if(target.closest('.temp-update-name')){
+                                
+                            } else if(target.closest('.private-switch')){
+                                this.user.switchPrivate();
+                            }
+                        })
+
+                        const tempUpdating = makeEl('', [tempUpdatingLabel, tempUpdatingEditables])
+
+                        createParentDivAndAppend('updateToolbar', [tempUpdating]);
+                        this.updateToolbar.classList.add('update-toolbar')
+
+                        createBtn('updateCancel', 
+                            {text: 'Cancel', iconPath: "M24 20.188l-8.315-8.209 8.2-8.282-3.697-3.697-8.212 8.318-8.31-8.203-3.666 3.666 8.321 8.24-8.206 8.313 3.666 3.666 8.237-8.318 8.285 8.203z"},
+                            ['bot--btn'], e => {
+                                this.updateCancel.classList.add('inactive-btn')
+                                this.updateTemplate('cancel')
+                            }, 'updateToolbar')
+
+                        createBtn('updateSave',
+                            {text: 'Save', iconPath: "M20.285 2l-11.285 11.567-5.286-5.011-3.714 3.716 9 8.728 15-15.285z"},
+                            ['bot--btn'],
+                            e => {
+                                this.updateSave.classList.add('inactive-btn')
+                                this.updateTemplate('save')
+                            }, 'updateToolbar')
+                        })()
+                    
+                    let tempMenu = false;
+                    let oldTempId = false;
+                    const removeMenuWindow = () => {
+                        if(tempMenu) tempMenu.remove()
+                    }
                     const createMenuWindow = (btnEl, tempId) => {
                         removeMenuWindow()
                         if(tempId !== oldTempId){
-                            deleteOption = makeEl(['template-option', 'option-delete'], 'Delete')
-                            tempMenu = makeEl('template-menu', deleteOption)
+                            const deleteOption = makeEl(['template-option', 'option-delete'], 'Delete')
+                            const editOption = makeEl(['template-option', 'option-edit'], 'Edit')
+                            tempMenu = makeEl('template-menu', [editOption, deleteOption])
 
                             btnEl.appendChild(tempMenu)
                             oldTempId = tempId;
-                        } else oldTempId = ''
+                        } else {
+                            oldTempId = false
+                        }
                     }
 
                     body.addEventListener('click', e => {
                         if(tempMenu){
                             if(!e.target.closest('.bot-temp-menu') && !e.target.closest('.template-menu')){
-                                oldTempId = '';
+                                oldTempId = false;
                                 tempMenu.remove();
                             }
                         }
@@ -815,7 +1131,7 @@ bot ? bot.stop() : null;
 
                 createBtn('sideSwitch', '<|>', ['top-btns', 'bot--btn', 'icon-btn', 'side-switch'], e => {
                     this.position = this.panel.classList.toggle('right')
-                }, 'panel')
+                }, this.panel)
                 this.sideSwitch.title = 'Change bot position (left/right)';
                 this.sideSwitch.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M6 13v4l-6-5 6-5v4h3v2h-3zm9-2v2h3v4l6-5-6-5v4h-3zm-4-6v14h2v-14h-2z"/></svg>';
                 const logInBtnPath = '<path d="M8 9v-4l8 7-8 7v-4h-8v-6h8zm2-7v2h12v16h-12v2h14v-20h-14z"/>';
@@ -825,7 +1141,7 @@ bot ? bot.stop() : null;
                 (() => {
                     createBtn('userBtn', 'Sign in/Register', ['top-btns', 'bot--btn', 'icon-btn'], e => {
                         handleWindowActions(e, this[onWindow], '.bot-window')
-                    }, 'panel')
+                    }, this.panel)
                     
                     this.userBtn.title = 'Sign in/Register';
                     this.userBtn.innerHTML = '<svg xmlns="https://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8 9v-4l8 7-8 7v-4h-8v-6h8zm2-7v2h12v16h-12v2h14v-20h-14z"/></svg>';
@@ -842,30 +1158,25 @@ bot ? bot.stop() : null;
                     const printResultMsg = printResultMessage.bind(null, resultMsgBox)
                     const windowContent = makeEl('', [loginObj.container, passObj.container, resultMsgBox])
 
-                    const signIn = makeEl(['sign-title'], 'Sign in');
-                    const signUp = makeEl(['sign-title', 'active'], 'Register');
-                    const signSwitch = makeEl(['bot--container', 'sign-switch'], [signUp, signIn]);
-                    
-                    let signSwitchState = 'up';
-                    signSwitch.addEventListener('click', e => {
-                        printResultMsg('')
-                        signIn.classList.toggle('active')
-                        signUp.classList.toggle('active')
-
-                        if(signSwitchState === 'up'){
-                            signSwitchState = 'in'
-                            this.signBtn.textContent = 'Sign in';
-                        } else {
-                            signSwitchState = 'up'
-                            this.signBtn.textContent = 'Register';
+                    let signSwitchState = null;
+                    const signSwitch = makeSwitch({
+                        flickTexts: ['Sign in', 'Register'],
+                        onSwitch: (state) => {
+                            printResultMsg('')
+                            const stateText = (state ? 'Register' : 'Sign in');
+                            this.signBtn.textContent = stateText;
+                            signSwitchState = stateText;
                         }
                     })
+
                     const topBar = makeEl('top-bar', [signSwitch, this.closeSign]);
                     createParentDiv('signWindow', [topBar, windowContent])
                     this.signWindow.classList.add('sign-window', 'bot-window')
                     this.signWindow.title = ''
 
                     createBtn('signBtn', 'Register', ['bot--btn', 'sign-btn'], e => {
+                        printResultMsg('')
+
                         const user = {
                             login: loginObj.input.value,
                             password: passObj.input.value
@@ -876,7 +1187,7 @@ bot ? bot.stop() : null;
                         }
                         this.signBtn.classList.add('inactive-btn');
 
-                        const url = backendUrl + 'users/' + (signSwitchState === 'up' ? 'register' : 'signin');
+                        const url = backendUrl + 'users/' + (signSwitchState === 'Register' ? 'register' : 'signin');
                         fetch(url, {
                             method: 'POST',
                             credentials: 'include',
@@ -886,20 +1197,19 @@ bot ? bot.stop() : null;
                             body: JSON.stringify(user)
                         })
                         .then(async res => {
-                            // const contentType = res.headers.get("content-type");
-                            // if (contentType && contentType.indexOf("application/json") !== -1) { //register
                             const data = await res.json();
 
                             if(!res.ok){
                                 printResultMsg(data.msg);
                             } else {
                                 if(data.login){
-                                    this.user.setLoggedState(data.login)
+                                    printResultMsg('')
+                                    this.user.setLoggedState(data)
                                 } else {
                                     printResultMsg(data.msg, true);
                                 }
                             }
-                            // }
+
                             this.signBtn.classList.remove('inactive-btn');
                         }).catch(err => {
                             printResultMsg(err);
@@ -912,15 +1222,80 @@ bot ? bot.stop() : null;
 
                 let onWindow = 'signWindow';
                 let offWindow = 'userWindow';
+                
+                const cp = bot.cp;
                 this.user = {
                     login: null,
-                    setLoggedState: function(login){
-                        this.login = login;
+                    permissions: 'standard',
+                    updatingTemplate: {},
+
+                    get isUpdatingTemplate(){
+                        return Boolean(this.updatingTemplate && this.updatingTemplate.name)
+                    },
+
+                    get isLoggedIn(){
+                        return Boolean(this.login)
+                    },
+
+                    switchPrivate(){
+                        return cp.privateSwitch.classList.toggle('true')
+                    },
+
+                    setUpdating(temp){
+                        if(temp && temp.name){
+                            this.updatingTemplate = temp;
+                            cp.tempUpdatingName.value = temp.name;
+                            
+                            if(temp.private){
+                                cp.privateSwitch.classList.add('true')
+                            } else {
+                                cp.privateSwitch.classList.remove('true')
+                            }
+
+                            cp.panel.classList.add('editMode')
+                            
+                        } else {
+                            this.updatingTemplate = null;
+                            if(cp.tempUpdatingName) cp.tempUpdatingName.textContent = '-';
+                            cp.panel.classList.remove('editMode')
+                        }
+                    },
+
+                    setLoggedState(user){
+                        if(user && user.login){
+                            this.login = user.login;
+                            this.permissions = user.permissions;
+                            this.autoSave = user.autoSave;
+                            this.setUpdating(user.updatingTemplate);
+                            
+                            if(this.autoSave){
+                                const autoSave = this.autoSave;
+                                // const asTemp = autoSave.template;
+                                // const defTemp = bot.text.packData();
+                                
+                                setTimeout(() => {
+                                    bot.cp.showAlert('Do you want to load autosave from '+autoSave.timestamp+'? You can access your autosave later in search window.', {
+                                        okBtnText: 'Load autosave',
+                                        onConfirm(){
+                                            bot.text.import(null, autoSave.template, true)
+                                        }
+                                    })
+                                }, 0)
+                            }
+                            
+                            if(user.updatingTemplate) cp.updateTemplate('init')
+                        } else {
+                            this.login = null;
+                            this.permissions = null;
+                            this.autoSave = null;
+                            this.setUpdating(null);
+                        }
                         logInOutAction()
                     }
                 }
-
+                
                 const logInOutAction = () => {
+                    this.myTemplates.classList.toggle('bot-unshown')
                     if(this.user.login){
                         checkSignWindows()
                         offWindow = 'signWindow';
@@ -950,6 +1325,7 @@ bot ? bot.stop() : null;
                 const setLoginTitle = (login) => {
                     this.loginTitle.innerHTML = '';
                     this.loginTitle.appendChild(makeEl('', 'Account: ' + login))
+                    loginContainer.textContent = this.user.login;
                 }
 
                 const authCheck = () => {
@@ -957,19 +1333,18 @@ bot ? bot.stop() : null;
                         method: 'POST',
                         credentials: 'include'
                     }).then(async res => {
-                        const data = await res.json()
+                        const user = await res.json()
                         
-                        if(data && data.login){
-                            this.user.setLoggedState(data.login)
+                        if(user && user.login){
+                            this.user.setLoggedState(user)
                         }
                     })
                 };
 
                 authCheck();
 
-                // user window
+                // account/user window
                 (() => {
-
                     const resultMsgBox = makeEl('result-msg')
                     const printResultMsg = printResultMessage.bind(null, resultMsgBox)
 
@@ -978,33 +1353,49 @@ bot ? bot.stop() : null;
                     })
                     createParentDivAndAppend('loginTitle', [])
                     const topBar = makeEl('top-bar', [this.loginTitle, this.closeUser]);
+
+                    createBtn('userTemplates',
+                        {text: 'My templates', iconPath: 'M16 0v2h-8v-2h8zm0 24v-2h-8v2h8zm2-22h4v4h2v-6h-6v2zm-18 14h2v-8h-2v8zm2-10v-4h4v-2h-6v6h2zm22 2h-2v8h2v-8zm-2 10v4h-4v2h6v-6h-2zm-16 4h-4v-4h-2v6h6v-2z'},
+                        ['bot-list-item'],
+                        e => {
+                            handleWindowActions(e, this.searchWindow, ['.template-menu']);
+                            this.editSearchParams({ myTemplates: 1 })
+                            this.fetchTemplates()
+                        }
+                    )
                     
-                    createParentDiv('userWindow', [topBar])
+                    createBtn('logoutBtn', 
+                        {text: 'Logout', iconPath: 'M16 9v-4l8 7-8 7v-4h-8v-6h8zm-16-7v20h14v-2h-12v-16h12v-2h-14z'},
+                        ['bot-list-item', 'sign-btn', 'icon-btn'],
+                        e => {
+                            this.logoutBtn.classList.add('inactive-btn');
+                            const url = backendUrl + 'users/logout'
+                            fetch(url, {
+                                method: 'POST',
+                                credentials: 'include',
+                            })
+                            .then(async res => {
+                                const data = await res.json();
+                                
+                                if(!res.ok){
+                                    printResultMsg(data.msg);
+                                } else {
+                                    printResultMsg(data.msg, true);
+                                    this.user.setLoggedState(null)
+                                }
+                                this.logoutBtn.classList.remove('inactive-btn');
+                            }).catch(err => {
+                                printResultMsg(err);
+                                this.logoutBtn.classList.remove('inactive-btn');
+                            });
+                        }
+                    )
+                    
+                    const windowContent = makeEl('user-content', [this.userTemplates, this.logoutBtn])
+
+                    createParentDiv('userWindow', [topBar, windowContent])
                     this.userWindow.classList.add('sign-window', 'bot-window', 'off')
                     this.userWindow.title = ''
-                    
-                    createBtn('logoutBtn', 'logout', ['bot--btn', 'sign-btn'], e => {
-                        this.logoutBtn.classList.add('inactive-btn');
-                        const url = backendUrl + 'users/logout'
-                        fetch(url, {
-                            method: 'POST',
-                            credentials: 'include',
-                        })
-                        .then(async res => {
-                            const data = await res.json();
-                            
-                            if(!res.ok){
-                                printResultMsg(data.msg);
-                            } else {
-                                printResultMsg(data.msg, true);
-                                this.user.setLoggedState(null)
-                            }
-                            this.logoutBtn.classList.remove('inactive-btn');
-                        }).catch(err => {
-                            printResultMsg(err);
-                            this.logoutBtn.classList.remove('inactive-btn');
-                        });
-                    }, this.userWindow)
                     
                     this.userBtn.appendChild(this.userWindow)
                 })()
@@ -1032,13 +1423,56 @@ bot ? bot.stop() : null;
                             if(nonSim[i] !== window && !nonSim[i].classList.contains('off')) nonSim[i].classList.add('off')
                         }
                         if(window !== this[onWindow]) this[onWindow].classList.add('off')
-                        return window.classList.toggle('off')
-                    }
+                        return !window.classList.toggle('off')
+                    } else return false
                 }
 
-                appendElWithText('title', ['bot--title'], 'BloonBot v' + bot.version, 'panel');
-                // createParentDivAndAppend('mainBar', ['hideBtn', 'sideSwitch', 'userBtn', 'title'], 'panel');
-                const mainBtnsContainer = makeEl(['bot--container'], [this.hideBtn, this.sideSwitch, this.userBtn])
+                this.temporarySave = null;
+                this.makeTemporarySave = () => {
+                    this.temporarySave = bot.text.packData()
+                }
+
+                this.applyTemporarySave = () => {
+                    bot.text.import(null, this.temporarySave, true)
+                }
+
+                this.postAutoSave = () => {
+                    fetch(backendUrl+'templates/autoSave', {
+                        method: 'POST',
+                        credentials: 'include',
+                        headers: {
+                            'Content-type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            name: '__autosave__',
+                            template: bot.text.packData(),
+                            autoSave: true
+                        })
+                    })
+                }
+
+                window.addEventListener('beforeunload', e => {
+                    const user = this.user;
+                    if(user.isLoggedIn){
+                        if(!user.isUpdatingTemplate){
+                            const blob = new Blob([JSON.stringify({
+                                name: '__autosave__',
+                                template: bot.text.packData(),
+                                autoSave: true
+                            })], {type: 'application/json; charset=UTF-8'});
+
+                            navigator.sendBeacon(backendUrl+'templates/autoSave', blob)
+                        }
+                    } else console.log('Cant post autosave, user doesnt appear to be logged in')
+                })
+
+                this.title = makeEl('bot--title', 'BloonBot v' + bot.version, 'span')
+                this.panel.appendChild(this.title);
+
+                const loginContainer = makeEl('login-container')
+                const userContainer = makeEl('user-container', [this.userBtn, loginContainer])
+                const mainBtnsContainer = makeEl(['bot--container'], [this.hideBtn, this.sideSwitch, userContainer])
+
                 const mainTopBar = makeEl(['bot--container'], [mainBtnsContainer, this.title])
 
                 this.panel.appendChild(mainTopBar);
@@ -1069,485 +1503,7 @@ bot ? bot.stop() : null;
             },
 
             stylize() {
-                const css = `
-                    #botPanel {
-                        color: white;
-                        padding: 10px;
-                        z-index: 1000;
-                        position: absolute;
-                        width: 450px;
-                        background: #000a;
-                        box-sizing: border-box;
-                        font-family: roboto, arial;
-                    }
-
-                    #botPanel.right {
-                        right: 0;
-                    }
-
-                    #botPanel.right .bot-window {
-                        right: 30px;
-                        left: initial;
-                    }
-
-                    input, textarea {
-                        box-sizing: border-box;
-                    }
-                    
-                    #botPanel label *, #botPanel label {
-                        cursor: pointer;
-                    }
-                    
-                    .top-btns {
-                        margin-left: 10px;
-                        fill: white;
-                    }
-
-                    .side-switch {
-                        padding: 2px !important;
-                    }
-
-                    .sign-window {
-                        top: 0;
-                        bottom: initial !important;
-                    }
-
-                    .sign-window .bot--btn {
-                        margin-top: 10px;
-                    }
-
-                    .sign-title {
-                        display: flex;
-                        justify-content: center;
-                        align-items: center;
-                        padding: 5px;
-                        border: 2px solid #aaa;
-                        color: #aaa;
-                        cursor: pointer;
-                    }
-
-                    .sign-title.active {
-                        border: 2px solid white;
-                        color: white;
-                    }
-
-                    .sign-title:nth-of-type(2) {
-                        margin-left: 5px;
-                    }
-
-                    .inactive-btn {
-                        background: #666 !important;
-                    }
-
-                    .inactive-btn::after {
-                        content: '...'
-                    }
-
-                    .input-container {
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                    }
-
-                    .sign-window .input-container {
-                        margin-top: 5px;
-                    }
-
-                    .input-container input {
-                        flex: 1;
-                        margin-left: 5px;
-                    }
-
-                    .result-msg {
-                        color: #6f6;
-                        margin-top: 5px;
-                    }
-
-                    .result-msg.wrong {
-                        color: #f66;
-                    }
-
-                    .form-input-label {
-                        margin-top: 0 !important;
-                    }
-
-                    .bot--title {
-                        display: inline-block;
-                        right: 10px;
-                        color: #fff8;
-                        font-weight: bold;
-                    }
-
-                    #bot--all-without-hide-btn {
-                        display: flex;
-                        flex-flow: column;
-                        justify-content: center;
-                        margin: 10px 0 0;
-                    }
-
-                    .bot--list {
-                        max-height: 20vh;
-                        overflow: auto;
-                    }
-
-                    .bot--container {
-                        display: flex;
-                        justify-content: space-between;
-                        align-items: center;
-                    }
-
-                    .bot--queue-item {
-                        padding: 2px;
-                        background: #fff9;
-                        color: black;
-                        border-top: 1px solid #777;
-                        max-width: 100%;
-                        overflow: hidden;
-                        position: relative;
-                        text-overflow: ellipsis;
-                        white-space: nowrap;
-                    }
-
-                    .bot--queue-item.bot--cond-item {
-                        padding: 0px;
-                    }
-
-                    .bot--list-active-el {
-                        background: #fffc;
-                    }
-
-                    .bot--list-active-el::after {
-                        content: '';
-                        position: absolute;
-                        right: 0;
-                        top: 0;
-                        height: 100%;
-                        width: 25px;
-                        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' fill='%23f55' viewBox='0 0 640 640' shape-rendering='geometricPrecision' text-rendering='geometricPrecision' image-rendering='optimizeQuality' fill-rule='evenodd' clip-rule='evenodd'%3E%3Cpath d='M153.581 320L486.42 640.012V-.012L153.581 320z'/%3E%3C/svg%3E");
-                        background-position: left;
-                    }
-
-                    #bot--list-control input, .bot--queue-item {
-                        font-size: 15px;
-                    }
-
-                    #bot--rate {
-                        margin: 10px 0;
-                        color: white;
-                    }
-
-                    #bot--rate-controller {
-                        cursor: pointer;
-                        width: 100%;
-                    }
-
-                    #bot--rate-gauge {
-                        font-weight: bold;
-                    }
-
-                    .onOffSwitches {
-                        display: flex;
-                    }
-
-                    .onOffSwitches > * {
-                        flex: 1 0 40px;
-                    }
-
-                    .bot--btn {
-                        padding: 5px;
-                        background: red;
-                        color: white;
-                        border: 2px solid white;
-                        cursor: pointer;
-                        font-weight: bold;
-                    }
-
-                    .bot--switch {
-                        padding: 10px;
-                        flex: 3 0 200px;
-                    }
-
-                    .bot--remove-queue {
-                        padding: 2px 6px;
-                    }
-
-                    .bot--list-control {
-                        display: flex;
-                        justify-content: space-between;
-                        align-items: center;
-                        margin: 5px 0 5px;
-                    }
-
-                    .bot--expimp {
-                        margin: 10px 0 5px;
-                        display: flex;
-                        justify-content: space-around;
-                        flex-flow: column;
-                    }
-
-                    .bot--expimp input[type='file']{
-                        width: 250px;
-                        margin-left: 10px;
-                    }
-
-                    .import-top {
-                        display: flex;
-                        justify-content: space-between;
-                        align-items: center;
-                        height: 30px;
-                        margin-top: 10px;
-                    }
-
-                    .bot--expimp input{
-                        width: 100%;
-                    }
-
-                    .bot--expimp div {
-                        margin-top: 10px;
-                    }
-
-                    .bot--import {
-                        background: #8f8;
-                        color: #080;
-                    }
-
-                    .bot--export {
-                        background: #f88;
-                        color: #800;
-                    }
-
-                    #bot--impSep {
-                        width: 30px;
-                    }
-
-                    #bot--expName {
-                        width: 60px;
-                    }
-
-                    .bot--export-div {
-                        position: relative;
-                    }
-
-                    .upload-btn {
-                        background: #f88;
-                        fill: #800;
-                        position: absolute !important;
-                        right: 0;
-                        top: 0;
-                    }
-
-                    .upload-content {
-                        margin-top: 10px;
-                    }
-
-                    .upload-temp {
-                        background: #f88;
-                        color: #800;
-                        grid-column: 2/4;
-                        grid-row: end;
-                        margin-top: 10px;
-                    }
-
-                    .search-btn {
-                        background: #8f8;
-                        fill: #080;
-                    }
-                    
-                    .search-window {
-                        height: 500px;
-                    }
-
-                    .icon-btn {
-                        width: 30px;
-                        height: 30px;
-                        position: relative;
-                        display: flex;
-                        justify-content: center;
-                        align-items: center;
-                    }
-
-                    .icon-btn > svg {
-                        width: 30px;
-                    }
-
-                    .bot-window {
-                        position: absolute;
-                        left: 40px;
-                        bottom: 30px;
-                        background: #000c;
-                        width: 400px;
-                        cursor: auto;
-                        padding: 10px;
-                        font-weight: normal;
-                    }
-                    
-                    .bot-window .top-bar {
-                        display: flex;
-                        justify-content: space-between;
-                        align-items: center;
-                        font-size: 1.2em;
-                        font-weight: bold;
-                    }
-                    
-                    .bot-window.off {
-                        display: none;
-                        pointer-events: none;
-                    }
-                    
-                    .bot-window .close {
-                        margin-left: 10px;
-                    }
-
-                    .templates-result {
-                        overflow: auto;
-                        height: 90%;
-                    }
-                    
-                    .template {
-                        background: #4448;
-                        padding: 5px;
-                        position: relative;
-                    }
-                    
-                    .template-top {
-                        margin-top: 0px !important;
-                    }
-                    
-                    .template-name {
-                        font-weight: bold;
-                    }
-
-                    .template-author {
-                        color: #888;
-                    }
-
-                    .template-peek {
-                        color: #bbb;
-                        white-space: nowrap;
-                        text-overflow: ellipsis;
-                        overflow: hidden;
-                        margin-bottom: 5px;
-                    }
-
-                    .template .result-msg {
-                        margin-top: 0;
-                    }
-
-                    .bot-temp-apply, .bot-temp-menu {
-                        fill: white;
-                        position: absolute;
-                        cursor: pointer;
-                    }
-                    
-                    .bot-temp-apply {
-                        margin: 0 5px;
-                        right: 0;
-                    }
-
-                    .bot-temp-menu {
-                        left: 0;
-                    }
-
-                    .template-menu {
-                        width: 100px;
-                        left: 0;
-                        top: 10px;
-                        position: absolute;
-                        background: #000a;
-                        z-index: 1;
-                    }
-
-                    .template-option {
-                        margin: 0 !important;
-                        padding: 5px 0;
-                        border-bottom: 1px solid #555;
-                    }
-
-                    textarea {
-                        width: 100%;
-                        resize: none;
-                    }
-
-                    .bot--box-l2 {
-                        margin-left: 20px;
-                    }
-
-                    .bot--box-l3 {
-                        margin-left: 30px;
-                    }
-
-                    #botPanel label.unactive {
-                        color: #aaa;
-                    }
-
-                    .bot--condits-switch {
-                        width: 35%;
-                        background: #f55 !important;
-                        margin-top: 10px;
-                    }
-
-                    #botPanel .btn-on {
-                        background: green;
-                    }
-
-                    .unactive-form {
-                        display: none;
-                    }
-                    
-                    .cond-form .bot--list-control {
-                        font-weight: bold;
-                    }
-                    
-                    .cond-form input {
-                        width: 100%;
-                    }
-
-                    .bot--cond-item {
-                        display: flex;
-                    }
-
-                    .bot--cond-item > * {
-                        width: 50%;
-                        height: 100%;
-                        overflow: hidden;
-                        text-overflow: ellipsis;
-                        white-space: nowrap;
-                        padding: 2px;
-                    }
-
-                    .then-part {
-                        background: #f779;
-                    }
-
-                    .necessary_submit {
-                        display: none;
-                    }
-
-                    .templates-modes-div {
-                        margin-top: 10px;
-                        display: flex;
-                        justify-content: space-between;
-                    }
-
-                    .queue-icon {
-                        margin-right: 6px;
-                        cursor: pointer;
-                    }
-
-                    .editInput {
-                        width: 100%;
-                        box-sizing: border-box;
-                    }
-
-                    .invalid-item {
-                        color: white;
-                        background: #f22;
-                    }
-
-                    .begin-div {
-                        margin-top: 10px;
-                    }
-                `;
+                const css = '';
                 // active el - border: 1px solid #f55;
 
                 const style = document.createElement('style');
@@ -1663,7 +1619,7 @@ bot ? bot.stop() : null;
             insert(forceFreshMsg = false) {
                 if (this.listLength === 0) {
                     bot.stop();
-                    alert('Empty queue!');
+                    bot.cp.showAlert('No messages in queue. Turn off queue on the top if you dont want queue running.', {okOnly: true});
                 } else {
                     this.checkCounters()
 
@@ -1858,63 +1814,65 @@ bot ? bot.stop() : null;
                 }
             },
 
-            confirmListRemove(){
-                if(this[this.presentListLength] > 1)
-                    return confirm('This will clear the list of messages. Proceed?')
-                else
-                    return true
+            confirmListRemove(cb){
+                if(this[this.presentListLength] === 1 || !cb) return
+
+                bot.cp.showAlert('This will clear list of messages. Proceed?', {
+                    okBtnText: 'Clear list',
+                    onConfirm(){ cb() }
+                })
             },
 
-            setTemplate(temp) {
-                if(this.confirmListRemove()){
-                    let arr = '';
+            // setTemplate(temp) {
+            //     if(this.confirmListRemove()){
+            //         let arr = '';
 
-                    if(!this.isConditsShown){
-                        switch (temp) {
-                            case 'waves':
-                                arr = ["🎈", "🎈🎈", "🎈🎈🎈", "🎈🎈🎈🎈", "🎈🎈🎈🎈🎈", "🎈🎈🎈🎈", "🎈🎈🎈", "🎈🎈", "🎈"]
-                                break;
-                            case 'Bałkanica':
-                                const text = 'Bałkańska w żyłach płynie krew,| kobiety, wino, taniec, śpiew.| Zasady proste w życiu mam,| nie rób drugiemu tego-| czego ty nie chcesz sam!| Muzyka, przyjaźń, radość, śmiech.| Życie łatwiejsze staje się.| Przynieście dla mnie wina dzban,| potem ruszamy razem w tan.| Będzie! Będzie zabawa!| Będzie się działo!| I znowu nocy będzie mało.| Będzie głośno, będzie radośnie| Znów przetańczymy razem całą noc.| Będzie! Będzie zabawa!| Będzie się działo!| I znowu nocy będzie mało.| Będzie głośno, będzie radośnie| Znów przetańczymy razem całą noc.| Orkiestra nie oszczędza sił| już trochę im brakuje tchu.| Polejcie wina również im| znów na parkiecie będzie dym.| Bałkańskie rytmy, Polska moc!| Znów przetańczymy całą noc.| I jeszcze jeden malutki wina dzban| i znów ruszymy razem w tan!| Będzie! Będzie zabawa!| Będzie się działo!| I znowu nocy będzie mało.| Będzie głośno, będzie radośnie| Znów przetańczymy razem całą noc.| Będzie! Będzie zabawa!| Będzie się działo!| I znowu nocy będzie mało.| Będzie głośno, będzie radośnie| Znów przetańczymy razem całą noc.|';
-                                arr = text.split('|');
-                                break;
-                            default:
-                                break;
-                        }
-                    } else {
-                        switch (temp) {
-                            case 'fake k/m17':
-                                arr = [{
-                                    "ifs": ["m"],
-                                    "thens": ["k"]
-                                }, {
-                                    "ifs": ["k"],
-                                    "thens": ["m"]
-                                }, {
-                                    "ifs": ["/.*lat.*/"],
-                                    "thens": ["17"]
-                                }, {
-                                    "ifs": ["/.*m[\\d].*/"],
-                                    "thens": ["k17"]
-                                }, {
-                                    "ifs": ["/.*k[\\d].*/"],
-                                    "thens": ["m17"]
-                                }, {
-                                    "ifs": ["hej"],
-                                    "thens": ["hej k"]
-                                }, {
-                                    "ifs": ["/^km.*/"],
-                                    "thens": ["k"]
-                                }]
-                                break;
-                            default:
-                                break;
-                        }
-                    }
-                    this.mutateTextArr(arr);
-                }
-                bot.cp.select.value = 'NONE';
-            },
+            //         if(!this.isConditsShown){
+            //             switch (temp) {
+            //                 case 'waves':
+            //                     arr = ["🎈", "🎈🎈", "🎈🎈🎈", "🎈🎈🎈🎈", "🎈🎈🎈🎈🎈", "🎈🎈🎈🎈", "🎈🎈🎈", "🎈🎈", "🎈"]
+            //                     break;
+            //                 case 'Bałkanica':
+            //                     const text = 'Bałkańska w żyłach płynie krew,| kobiety, wino, taniec, śpiew.| Zasady proste w życiu mam,| nie rób drugiemu tego-| czego ty nie chcesz sam!| Muzyka, przyjaźń, radość, śmiech.| Życie łatwiejsze staje się.| Przynieście dla mnie wina dzban,| potem ruszamy razem w tan.| Będzie! Będzie zabawa!| Będzie się działo!| I znowu nocy będzie mało.| Będzie głośno, będzie radośnie| Znów przetańczymy razem całą noc.| Będzie! Będzie zabawa!| Będzie się działo!| I znowu nocy będzie mało.| Będzie głośno, będzie radośnie| Znów przetańczymy razem całą noc.| Orkiestra nie oszczędza sił| już trochę im brakuje tchu.| Polejcie wina również im| znów na parkiecie będzie dym.| Bałkańskie rytmy, Polska moc!| Znów przetańczymy całą noc.| I jeszcze jeden malutki wina dzban| i znów ruszymy razem w tan!| Będzie! Będzie zabawa!| Będzie się działo!| I znowu nocy będzie mało.| Będzie głośno, będzie radośnie| Znów przetańczymy razem całą noc.| Będzie! Będzie zabawa!| Będzie się działo!| I znowu nocy będzie mało.| Będzie głośno, będzie radośnie| Znów przetańczymy razem całą noc.|';
+            //                     arr = text.split('|');
+            //                     break;
+            //                 default:
+            //                     break;
+            //             }
+            //         } else {
+            //             switch (temp) {
+            //                 case 'fake k/m17':
+            //                     arr = [{
+            //                         "ifs": ["m"],
+            //                         "thens": ["k"]
+            //                     }, {
+            //                         "ifs": ["k"],
+            //                         "thens": ["m"]
+            //                     }, {
+            //                         "ifs": ["/.*lat.*/"],
+            //                         "thens": ["17"]
+            //                     }, {
+            //                         "ifs": ["/.*m[\\d].*/"],
+            //                         "thens": ["k17"]
+            //                     }, {
+            //                         "ifs": ["/.*k[\\d].*/"],
+            //                         "thens": ["m17"]
+            //                     }, {
+            //                         "ifs": ["hej"],
+            //                         "thens": ["hej k"]
+            //                     }, {
+            //                         "ifs": ["/^km.*/"],
+            //                         "thens": ["k"]
+            //                     }]
+            //                     break;
+            //                 default:
+            //                     break;
+            //             }
+            //         }
+            //         this.mutateTextArr(arr);
+            //     }
+            //     bot.cp.select.value = 'NONE';
+            // },
 
             setMode(mode, isAuto = false) {
                 if (mode === 'parrot') {
@@ -1972,8 +1930,9 @@ bot ? bot.stop() : null;
             },
 
             removeQueue() {
-                if(this.confirmListRemove())
-                    this.mutateTextArr(!this.isConditsShown ? ['🎈'] : [...this.initCondArr]);
+                this.confirmListRemove(() => {
+                    this.mutateTextArr(!this.isConditsShown ? ['🎈'] : [...this.initCondArr])
+                });
             },
 
             updateListItem(id){
@@ -2147,31 +2106,26 @@ bot ? bot.stop() : null;
                 if (!isPlainText) {
                     
                     const processData = (data) => {
-                        if(!data){
-                            alert('Unable to apply template. Not enough template data.')
+                        if(!data || !data.textArr || !data.condArr){
+                            bot.cp.showAlert('Unable to apply template. Not enough template data.', {okOnly: true})
                             return
                         }
 
                         this.mutateTextArr(data.textArr, 'queue');
                         this.mutateTextArr(data.condArr, 'conds');
-                        // if(!data.settings.switches.queue && data.settings.switches.conds){
-                            //     if(!this.isConditsShown){
-                                //         // bot.cp.handleConditsSwitch();
-                                //     }
-                                // }
                                 
-                                const keys = Object.keys(data.settings.boxes);
-                                const vals = Object.values(data.settings.boxes);
-                                const cp = bot.cp;
-                                
-                                for(let i=0; i<keys.length; i++){
-                                    const key = keys[i];
-                                    const val = vals[i];
-                                    
-                                    if(this[key] !== val){
-                                        const noIsKey = key.slice(2,3).toLowerCase() + key.slice(3);
-                                const box = noIsKey+'Box';
-                                const boxEl = cp[box];
+                        const keys = Object.keys(data.settings.boxes);
+                        const vals = Object.values(data.settings.boxes);
+                        const cp = bot.cp;
+                            
+                        for(let i=0; i<keys.length; i++){
+                            const rawBoxName = keys[i];
+                            const isTrue = vals[i];
+                            
+                            if(this[rawBoxName] !== isTrue){
+                                const boxNameRemovedIs = rawBoxName.slice(2,3).toLowerCase() + rawBoxName.slice(3); // keys transformed to match checkboxes names on 'this' object
+                                const boxName = boxNameRemovedIs+'Box';
+                                const boxEl = cp[boxName];
                                 boxEl.click();
                             }
                         }
@@ -2212,7 +2166,7 @@ bot ? bot.stop() : null;
                         reader.addEventListener('load', processFile);
 
                     } else {
-                        alert('Please upload a file or enter some text before continuing')
+                        bot.cp.showAlert('Please upload a file or enter some text before continuing.', {okOnly: true})
                     }
                 } else {
                     splitText(input);
@@ -2416,6 +2370,22 @@ bot ? bot.stop() : null;
 
             this.cp.init();
             this.text.init();
+
+            const necessaries = {
+                'send button': this.btn,
+                'input': this.inp,
+                'chat area': this.log
+            };
+            
+            if(!this.devMode){
+                for (const key in necessaries) {
+                    if (necessaries.hasOwnProperty(key)) {
+                        const element = necessaries[key];
+                        
+                        if(!element) this.cp.showAlert('Missing necessary element: ' + key + '. Bot may not work properly.', {okOnly: true})
+                    }
+                }
+            }
         },
     }
 

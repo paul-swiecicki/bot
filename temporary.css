@@ -1,0 +1,749 @@
+#botPanel {
+    color: white;
+    padding: 10px;
+    z-index: 1000;
+    position: absolute;
+    width: 450px;
+    background: #000a;
+    box-sizing: border-box;
+    font-family: roboto, arial;
+}
+
+#botPanel.right {
+    right: 0;
+}
+
+#botPanel.right .bot-window {
+    right: 30px;
+    left: initial;
+}
+
+.editMode {
+    border: 1px solid #c33;
+}
+
+.update-toolbar {
+    display: none;
+    justify-content: space-between;
+    padding-top: 10px;
+    margin-top: 10px;
+    border-top: 1px solid #c33;
+}
+
+.editMode .update-toolbar {
+    display: flex;
+}
+
+.temp-update-label {
+    color: #aaa;
+    font-size: 0.8em;
+}
+
+.temp-update-name {
+    font-weight: bold;
+    width: 100%;
+    background: none;
+    border: none;
+    border-bottom: 1px solid #555;
+    color: white;
+    font-size: 0.9rem;
+}
+
+.temp-update-name:focus {
+    border-bottom: 1px solid #fff;
+}
+
+/* .temp-update-name::after {
+    content: '';
+    background: #fff;
+    height: 1px;
+    width: 100%;
+    display: block;
+} */
+
+.temp-updating-editables {
+    margin-top: 3px;
+    display: flex;
+}
+
+.update-toolbar .private-switch {
+    cursor: pointer;
+    fill: #666;
+}
+
+.update-toolbar .private-switch.true {
+    fill: #fff;
+}
+
+input, textarea {
+    box-sizing: border-box;
+}
+
+#botPanel label *, #botPanel label {
+    cursor: pointer;
+}
+
+.top-btns {
+    margin-left: 10px;
+    fill: white;
+}
+
+.side-switch {
+    padding: 2px !important;
+}
+
+.sign-window {
+    top: 0;
+    bottom: initial !important;
+}
+
+.sign-window .bot--btn {
+    margin-top: 10px;
+}
+
+.bot-flick {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    padding: 5px 8px;
+    color: #aaa;
+    cursor: pointer;
+}
+
+.bot-flick.active {
+    border-bottom: 2px solid rgb(255, 81, 81);
+    color: white;
+}
+
+.bot-flick:nth-of-type(2) {
+    margin-left: 10px;
+}
+
+.user-content {
+    display: flex;
+    flex-flow: column;
+    justify-content: center;
+    margin-top: 8px;
+}
+
+.user-container {
+    display: flex;
+    align-items: center;
+}
+
+.login-container {
+    margin-left: 10px;
+    padding: 5px;
+}
+
+.bot-svg-icon {
+    margin-right: 5px;
+    width: 1.3em;
+    fill: #fff;
+}
+
+.bot-list-item .bot-svg-icon {
+    margin-right: 10px;
+    width: 20px;
+    fill: #aaa;
+}
+
+.update-toolbar .bot--btn .bot-svg-icon {
+    width: 15px;
+    fill: white;
+    margin-right: 5px;
+}
+
+.update-toolbar .bot--btn {
+    display: flex;
+    align-items: center;
+}
+
+.bot-list-item {
+    display: flex;
+    justify-content: left !important;
+    align-items: center;
+    padding: 6px;
+    background: none;
+    text-align: left;
+    color: white;
+    border: none;
+    border-top: 1px solid #333;
+    font-size: 14px;
+    cursor: pointer;
+    width: initial !important;
+}
+
+.bot-list-item:hover {
+    background: #4449;
+}
+
+.inactive-btn {
+    background: #666 !important;
+    pointer-events: none;
+}
+
+.inactive-btn::after {
+    content: '...';
+}
+
+.bot--btn.disabled-btn {
+    background: none;
+}
+
+.input-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sign-window .input-container {
+    margin-top: 5px;
+}
+
+.input-container input {
+    flex: 1;
+    margin-left: 5px;
+}
+
+.result-msg {
+    color: #6f6;
+    margin-top: 5px;
+}
+
+.result-msg.wrong {
+    color: #f66;
+}
+
+.form-input-label {
+    margin-top: 0 !important;
+}
+
+.bot--title {
+    display: inline-block;
+    right: 10px;
+    color: #fff6;
+}
+
+#bot--all-without-hide-btn {
+    display: flex;
+    flex-flow: column;
+    justify-content: center;
+    margin: 10px 0 0;
+}
+
+.bot--list {
+    max-height: 20vh;
+    overflow: auto;
+}
+
+.bot--container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.bot--queue-item {
+    padding: 2px;
+    background: #fff9;
+    color: black;
+    border-top: 1px solid #777;
+    max-width: 100%;
+    overflow: hidden;
+    position: relative;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.bot--queue-item.bot--cond-item {
+    padding: 0px;
+}
+
+.bot--list-active-el {
+    background: #fffc;
+}
+
+.bot--list-active-el::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    height: 100%;
+    width: 25px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' fill='%23f55' viewBox='0 0 640 640' shape-rendering='geometricPrecision' text-rendering='geometricPrecision' image-rendering='optimizeQuality' fill-rule='evenodd' clip-rule='evenodd'%3E%3Cpath d='M153.581 320L486.42 640.012V-.012L153.581 320z'/%3E%3C/svg%3E");
+    background-position: left;
+}
+
+.bot--queue-item {
+    font-size: 15px;
+}
+
+#bot--rate {
+    margin: 10px 0 0;
+    color: white;
+}
+
+#bot--rate-controller {
+    cursor: pointer;
+    width: 100%;
+}
+
+#bot--rate-gauge {
+    font-weight: bold;
+}
+
+.onOffSwitches {
+    display: flex;
+    margin-bottom: 10px;
+}
+
+.onOffSwitches > * {
+    flex: 1 0 40px;
+}
+
+.bot-options {
+    display: flex;
+    flex-flow: column;
+}
+
+.section-container {
+    display: grid;
+    grid-template-columns: 100%;
+}
+
+.section-container.with-border {
+    border-top: 2px solid #333;
+    padding-top: 10px;
+    margin: 10px 0 7px;
+}
+
+.section-content {
+    display: flex;
+    flex-flow: column;
+    position: relative;
+}
+
+.hide-section-btn {
+    border: none;
+    padding: 0 5px;
+    margin: -20px 0 10px;
+    justify-self: center;
+    background: rgb(0, 0, 0);
+    color: #666;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.hide-section-btn svg {
+    width: 12px;
+    fill: #666;
+    transform: rotateZ(90deg);
+}
+
+.hide-section-btn:hover {
+    color: #aaa !important;
+}
+
+.hide-section-btn:hover > svg {
+    fill: #aaa !important;
+}
+
+.section-container.off > .section-content {
+    display: none;
+}
+
+.section-container.off > .hide-section-btn {
+    color: #777;
+}
+
+.section-container.off > .hide-section-btn > svg {
+    transform: rotateZ(0deg);
+    fill: #777;
+}
+
+.bot--btn {
+    padding: 5px;
+    background: rgb(218, 26, 26);
+    color: white;
+    border: 2px solid white;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.bot--switch {
+    padding: 10px;
+    flex: 3 0 200px;
+}
+
+.bot--remove-queue {
+    padding: 2px 6px;
+}
+
+.bot--list-control {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 5px 0 5px;
+}
+
+.bot--expimp {
+    display: flex;
+    justify-content: space-around;
+    flex-flow: column;
+}
+
+.bot--expimp input[type='file']{
+    width: 250px;
+    margin-left: 10px;
+}
+
+.import-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 30px;
+    margin: 10px 0 5px;
+}
+
+.bot--expimp input{
+    width: 100%;
+}
+
+.bot--expimp .upload-window input {
+    width: initial;
+}
+
+.bot--import {
+    background: #8f8;
+    color: #080;
+}
+
+.bot--export {
+    background: #f88;
+    color: #800;
+    margin-right: 7px;
+}
+
+#bot--impSep {
+    width: 30px;
+}
+
+#bot--expName {
+    width: 130px;
+}
+
+.bot--export-div {
+    position: relative;
+}
+
+.upload-btn {
+    background: #f88;
+    fill: #800;
+    position: absolute !important;
+    right: 0;
+    top: 0;
+}
+
+.upload-content {
+    margin-top: 10px;
+}
+
+.upload-content .input-container {
+    margin-bottom: 10px;
+}
+
+.upload-temp {
+    background: #f88;
+    color: #800;
+    grid-column: 2/4;
+    grid-row: end;
+    margin-top: 10px;
+}
+
+.upload-window .private-div {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.search-btn {
+    background: #8f8;
+    fill: #080;
+}
+
+.search-window {
+    height: 500px;
+}
+
+.icon-btn {
+    width: 30px;
+    height: 30px;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.icon-btn > svg {
+    width: 30px;
+}
+
+.bot-window {
+    position: absolute;
+    left: 40px;
+    bottom: 30px;
+    background: #000c;
+    width: 400px;
+    cursor: auto;
+    padding: 10px;
+    font-weight: normal;
+    z-index: 11;
+}
+
+.bot-window .top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 1.2em;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.bot-window.off, .bot-unshown {
+    display: none;
+    pointer-events: none;
+}
+
+.bot-window .close {
+    margin-left: 10px;
+}
+
+.search-window {
+    display: flex;
+    flex-flow: column;
+}
+
+.templates-result {
+    overflow: auto;
+}
+
+.template {
+    background: #4448;
+    padding: 5px;
+    position: relative;
+    margin-top: 8px;
+}
+
+.template-name {
+    font-weight: bold;
+}
+
+.template-author {
+    color: #888;
+}
+
+.template-peek {
+    color: #bbb;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    margin: 5px 0;
+}
+
+.template .result-msg {
+    margin-top: 0;
+}
+
+.template.private .template-name svg {
+    width: 12px;
+    margin-left: 6px;
+    fill: white;
+}
+
+.template.private {
+    background: #4445;
+}
+
+.bot-temp-apply, .bot-temp-menu {
+    fill: #aaa;
+    position: absolute;
+    cursor: pointer;
+}
+
+.bot-temp-apply {
+    margin: 0 5px;
+    right: 0;
+    top: 5px;
+}
+
+.bot-temp-menu {
+    left: 0;
+}
+
+.template-menu {
+    width: 100px;
+    left: 0;
+    top: 10px;
+    position: absolute;
+    background: #000a;
+    z-index: 1;
+}
+
+.template-option {
+    margin: 0 !important;
+    padding: 5px 0;
+    border-bottom: 1px solid #555;
+}
+
+textarea {
+    width: 100%;
+    resize: none;
+}
+
+select {
+    cursor: pointer;
+}
+
+.bot--box-l2 {
+    margin-left: 20px;
+}
+
+.bot--box-l3 {
+    margin-left: 30px;
+}
+
+#botPanel label.unactive {
+    color: #aaa;
+}
+
+.bot-condits-switch {
+    position: absolute;
+    right: 0;
+}
+
+#botPanel .btn-on {
+    background: green;
+}
+
+.unactive-form {
+    display: none;
+}
+
+.cond-form {
+    margin-top: 30px;
+}
+
+.cond-control {
+    font-weight: bold;
+}
+
+.cond-form input {
+    width: 100%;
+}
+
+.bot--cond-item {
+    display: flex;
+}
+
+.bot--cond-item > * {
+    width: 50%;
+    height: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 2px;
+}
+
+.then-part {
+    background: #f779;
+}
+
+.necessary_submit {
+    display: none;
+}
+
+.templates-modes-div {
+    margin-top: 10px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.queue-icon {
+    margin-right: 6px;
+    cursor: pointer;
+}
+
+.editInput {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.invalid-item {
+    color: white;
+    background: #f22;
+}
+
+.begin-div {
+    margin-top: 10px;
+}
+
+.bot-warning {
+    background: rgba(236, 178, 18, 0.356);
+    padding: 8px;
+    font-size: 0.8rem;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.bot-warning.closed {
+    display: none;
+}
+
+.bot-close-warning {
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.warning-screen {
+    position: absolute;
+    z-index: 10;
+    background: rgba(0, 0, 0, 0.842);
+    display: flex;
+    flex-flow: column;
+    width: 100%;
+    height: 100%;
+    justify-content: center;
+    align-items: center;
+    top:  0;
+    left: 0;
+}
+
+.warning-btns {
+    display: flex;
+    flex-flow: row;
+    margin-top: 20px;
+    /* width: 70%; */
+}
+
+.warning-btns .bot--btn {
+    flex: 1;
+    text-align: center;
+    width: 120px;
+}
+
+.warning-ok {
+    margin: 0 10px;
+}
+
+.warning-cancel {
+    background: none;
+    margin: 0 10px;
+}
+
+.warning-info {
+    text-align: center;
+    padding: 0 30px;
+}
