@@ -30,4 +30,4 @@ exe = EXE(pyz,
           upx=True,
           upx_exclude=[],
           runtime_tmpdir=None,
-          console=True , icon='C:\\Users\\Chw\\Desktop\\PROG\\web coding\\boty\\launcher\\cpp.ico')
+          console=False , icon='C:\\Users\\Chw\\Desktop\\PROG\\web coding\\boty\\launcher\\bloon.ico')

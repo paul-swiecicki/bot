@@ -4,9 +4,12 @@
     z-index: 1000;
     position: absolute;
     width: 450px;
-    background: #000a;
     box-sizing: border-box;
     font-family: roboto, arial;
+}
+
+#botPanel, .bot-window {
+    background: #000d;
 }
 
 #botPanel.right {
@@ -75,7 +78,7 @@
     fill: #fff;
 }
 
-input, textarea {
+#botPanel input, #botPanel textarea {
     box-sizing: border-box;
 }
 
@@ -188,7 +191,7 @@ input, textarea {
 }
 
 .bot--btn.disabled-btn {
-    background: none;
+    background: none !important;
 }
 
 .input-container {
@@ -329,7 +332,7 @@ input, textarea {
     margin: -20px 0 10px;
     justify-self: center;
     background: rgb(0, 0, 0);
-    color: #666;
+    color: #555;
     font-size: 0.8rem;
     display: flex;
     align-items: center;
@@ -338,16 +341,16 @@ input, textarea {
 
 .hide-section-btn svg {
     width: 12px;
-    fill: #666;
+    fill: #555;
     transform: rotateZ(90deg);
 }
 
 .hide-section-btn:hover {
-    color: #aaa !important;
+    color: #bbb !important;
 }
 
 .hide-section-btn:hover > svg {
-    fill: #aaa !important;
+    fill: #bbb !important;
 }
 
 .section-container.off > .section-content {
@@ -355,12 +358,12 @@ input, textarea {
 }
 
 .section-container.off > .hide-section-btn {
-    color: #777;
+    color: #888;
 }
 
 .section-container.off > .hide-section-btn > svg {
     transform: rotateZ(0deg);
-    fill: #777;
+    fill: #888;
 }
 
 .bot--btn {
@@ -371,6 +374,7 @@ input, textarea {
     cursor: pointer;
     font-weight: bold;
 }
+
 
 .bot--switch {
     padding: 10px;
@@ -388,23 +392,30 @@ input, textarea {
     margin: 5px 0 5px;
 }
 
+.server-btn {
+    margin-bottom: 15px !important;
+}
+
+.bot--expimp .bot-window {
+    left: 210px;
+}
+
 .bot--expimp {
     display: flex;
-    justify-content: space-around;
-    flex-flow: column;
 }
 
-.bot--expimp input[type='file']{
-    width: 250px;
-    margin-left: 10px;
+.bot--expimp .icon-btn {
+    width: 100%;
 }
 
-.import-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    height: 30px;
-    margin: 10px 0 5px;
+.bot--expimp .bot-svg-icon {
+    height: 130%;
+    margin-right: 0;
+    fill: inherit;
+}
+
+.import-top > *, .bot--export-div > * {
+    margin-bottom: 5px;
 }
 
 .bot--expimp input{
@@ -415,15 +426,13 @@ input, textarea {
     width: initial;
 }
 
-.bot--import {
-    background: #8f8;
-    color: #080;
+.bot--expimp .bot-window {
+    color: white;
 }
 
-.bot--export {
-    background: #f88;
-    color: #800;
-    margin-right: 7px;
+.bot--import-div .bot--btn {
+    background: #8f8;
+    color: #080;
 }
 
 #bot--impSep {
@@ -434,16 +443,22 @@ input, textarea {
     width: 130px;
 }
 
-.bot--export-div {
+.bot--export-div, .bot--import-div {
     position: relative;
+    width: 50%;
+}
+
+.bot--export-div .bot--btn {
+    background: #f88;
+    color: #800;
+}
+
+.bot--export-div {
+    margin-right: 10px;
 }
 
 .upload-btn {
-    background: #f88;
     fill: #800;
-    position: absolute !important;
-    right: 0;
-    top: 0;
 }
 
 .upload-content {
@@ -455,8 +470,6 @@ input, textarea {
 }
 
 .upload-temp {
-    background: #f88;
-    color: #800;
     grid-column: 2/4;
     grid-row: end;
     margin-top: 10px;
@@ -469,7 +482,6 @@ input, textarea {
 }
 
 .search-btn {
-    background: #8f8;
     fill: #080;
 }
 
@@ -494,7 +506,6 @@ input, textarea {
     position: absolute;
     left: 40px;
     bottom: 30px;
-    background: #000c;
     width: 400px;
     cursor: auto;
     padding: 10px;
@@ -518,6 +529,8 @@ input, textarea {
 
 .bot-window .close {
     margin-left: 10px;
+    color: white;
+    background: red;
 }
 
 .search-window {
@@ -530,7 +543,7 @@ input, textarea {
 }
 
 .template {
-    background: #4448;
+    background: #222;
     padding: 5px;
     position: relative;
     margin-top: 8px;
@@ -563,7 +576,7 @@ input, textarea {
 }
 
 .template.private {
-    background: #4445;
+    background: #121212;
 }
 
 .bot-temp-apply, .bot-temp-menu {
@@ -635,12 +648,20 @@ select {
     margin-top: 30px;
 }
 
+.cond-form .input-container {
+    display: flex;
+    flex-flow: column;
+    align-items: flex-start;
+    width: 45%;
+}
+
 .cond-control {
     font-weight: bold;
 }
 
 .cond-form input {
     width: 100%;
+    margin-left: 0 !important;
 }
 
 .bot--cond-item {
