@@ -478,9 +478,8 @@ bot ? bot.stop() : 0;
                     }
                 })
 
-                const condIfInput = makeInput('IF: ', true, 'can be a RegEx (eg. /regex/)').container
-                const condThenInput = makeInput('THEN: ', true).container
-
+                this.condIf = makeInput('IF: ', true, 'can be a RegEx (eg. /regex/)')
+                this.condThen = makeInput('THEN: ', true)
                 createBtn('removeCondsBtn', 'X', ['bot--btn'], e => {
                     bot.text.removeQueue();
                 });
@@ -492,7 +491,7 @@ bot ? bot.stop() : 0;
                 sub.type = 'submit';
                 sub.classList.add('necessary_submit');
 
-                this.condControl = makeEl(['bot--list-control', 'cond-control'], [condIfInput, condThenInput, this.removeCondsBtn, sub])
+                this.condControl = makeEl(['bot--list-control', 'cond-control'], [this.condIf.container, this.condThen.container, this.removeCondsBtn, sub])
 
                 this.condList = document.createElement('div');
                 this.condList.classList.add('bot--list');
@@ -505,12 +504,12 @@ bot ? bot.stop() : 0;
                 
                 this.condForm.addEventListener('submit', e => {
                     e.preventDefault();
-                    const ifval = this.condIfInput.value;
-                    const thenval = this.condThenInput.value;
+                    const ifval = this.condIf.input.value;
+                    const thenval = this.condThen.input.value;
                     
                     bot.text.addMessage(constructCond(ifval, thenval));
 
-                    this.condIfInput.value = this.condThenInput.value = '';
+                    this.condIf.input.value = this.condThen.input.value = '';
                 });
 
                 //#############################################################################################
@@ -1499,8 +1498,12 @@ bot ? bot.stop() : 0;
                     } else console.log('Cant post autosave, user doesnt appear to be logged in')
                 })
 
-                this.title = makeEl('bot--title', 'BloonBot v' + bot.version, 'span')
-                this.panel.appendChild(this.title);
+                const title = makeEl('bot-title', 'BloonBot v' + bot.version, 'span')
+                const byDWS = makeEl('bot-by', 'by Dallow Wish Studios', 'a')
+                byDWS.href = 'https://www.facebook.com/PaprykarzPotworowski'
+                byDWS.target = 'blank'
+                const credits = makeEl('bot-credits', [title, byDWS])
+                this.panel.appendChild(credits);
 
                 const loginContainer = makeEl('login-container')
                 const userContainer = makeEl('user-container', [this.userBtn, loginContainer])
@@ -1537,7 +1540,7 @@ bot ? bot.stop() : 0;
 
             stylize() {
                 // const css = ''
-                const css = `#botPanel{color:#fff;padding:10px;z-index:1000;position:absolute;width:450px;box-sizing:border-box;font-family:roboto,arial}#botPanel,.bot-window{background:#000d}#botPanel.right{right:0}#botPanel.right .bot-window{right:30px;left:initial}.editMode{border:1px solid #c33}.update-toolbar{display:none;justify-content:space-between;padding-top:10px;margin-top:10px;border-top:1px solid #c33}.editMode .update-toolbar{display:flex}.temp-update-label{color:#aaa;font-size:.8em}.temp-update-name{font-weight:700;width:100%;background:0 0;border:none;border-bottom:1px solid #555;color:#fff;font-size:.9rem}.temp-update-name:focus{border-bottom:1px solid #fff}.temp-updating-editables{margin-top:3px;display:flex}.update-toolbar .private-switch{cursor:pointer;fill:#666}.update-toolbar .private-switch.true{fill:#fff}#botPanel input,#botPanel textarea{box-sizing:border-box}#botPanel label,#botPanel label *{cursor:pointer}.top-btns{margin-left:10px;fill:#fff}.side-switch{padding:2px!important}.sign-window{top:0;bottom:initial!important}.sign-window .bot--btn{margin-top:10px}.bot-flick{display:flex;justify-content:center;align-items:flex-end;padding:5px 8px;color:#aaa;cursor:pointer}.bot-flick.active{border-bottom:2px solid #ff5151;color:#fff}.bot-flick:nth-of-type(2){margin-left:10px}.user-content{display:flex;flex-flow:column;justify-content:center;margin-top:8px}.user-container{display:flex;align-items:center}.login-container{margin-left:10px;padding:5px}.bot-svg-icon{margin-right:5px;width:1.3em;fill:#fff}.bot-list-item .bot-svg-icon{margin-right:10px;width:20px;fill:#aaa}.update-toolbar .bot--btn .bot-svg-icon{width:15px;fill:#fff;margin-right:5px}.update-toolbar .bot--btn{display:flex;align-items:center}.bot-list-item{display:flex;justify-content:left!important;align-items:center;padding:6px;background:0 0;text-align:left;color:#fff;border:none;border-top:1px solid #333;font-size:14px;cursor:pointer;width:initial!important}.bot-list-item:hover{background:#4449}.inactive-btn{background:#666!important;pointer-events:none}.inactive-btn::after{content:'...'}.bot--btn.disabled-btn{background:0 0!important}.input-container{display:flex;align-items:center;justify-content:center}.sign-window .input-container{margin-top:5px}.input-container input{flex:1;margin-left:5px}.result-msg{color:#6f6;margin-top:5px}.result-msg.wrong{color:#f66}.form-input-label{margin-top:0!important}.bot--title{display:inline-block;right:10px;color:#fff6}#bot--all-without-hide-btn{display:flex;flex-flow:column;justify-content:center;margin:10px 0 0}.bot--list{max-height:20vh;overflow:auto}.bot--container{display:flex;justify-content:space-between;align-items:center}.bot--queue-item{padding:2px;background:#fff9;color:#000;border-top:1px solid #777;max-width:100%;overflow:hidden;position:relative;text-overflow:ellipsis;white-space:nowrap}.bot--queue-item.bot--cond-item{padding:0}.bot--list-active-el{background:#fffc}.bot--list-active-el::after{content:'';position:absolute;right:0;top:0;height:100%;width:25px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' fill='%23f55' viewBox='0 0 640 640' shape-rendering='geometricPrecision' text-rendering='geometricPrecision' image-rendering='optimizeQuality' fill-rule='evenodd' clip-rule='evenodd'%3E%3Cpath d='M153.581 320L486.42 640.012V-.012L153.581 320z'/%3E%3C/svg%3E");background-position:left}.bot--queue-item{font-size:15px}#bot--rate{margin:10px 0 0;color:#fff}#bot--rate-controller{cursor:pointer;width:100%}#bot--rate-gauge{font-weight:700}.onOffSwitches{display:flex;margin-bottom:10px}.onOffSwitches>*{flex:1 0 40px}.bot-options{display:flex;flex-flow:column}.section-container{display:grid;grid-template-columns:100%}.section-container.with-border{border-top:2px solid #333;padding-top:10px;margin:10px 0 7px}.section-content{display:flex;flex-flow:column;position:relative}.hide-section-btn{border:none;padding:0 5px;margin:-20px 0 10px;justify-self:center;background:#000;color:#555;font-size:.8rem;display:flex;align-items:center;cursor:pointer}.hide-section-btn svg{width:12px;fill:#555;transform:rotateZ(90deg)}.hide-section-btn:hover{color:#bbb!important}.hide-section-btn:hover>svg{fill:#bbb!important}.section-container.off>.section-content{display:none}.section-container.off>.hide-section-btn{color:#888}.section-container.off>.hide-section-btn>svg{transform:rotateZ(0);fill:#888}.bot--btn{padding:5px;background:#da1a1a;color:#fff;border:2px solid #fff;cursor:pointer;font-weight:700}.bot--switch{padding:10px;flex:3 0 200px}.bot--remove-queue{padding:2px 6px}.bot--list-control{display:flex;justify-content:space-between;align-items:center;margin:5px 0 5px}.server-btn{margin-bottom:15px!important}.bot--expimp .bot-window{left:210px}.bot--expimp{display:flex}.bot--expimp .icon-btn{width:100%}.bot--expimp .bot-svg-icon{height:130%;margin-right:0;fill:inherit}.bot--export-div>*,.import-top>*{margin-bottom:5px}.bot--expimp input{width:100%}.bot--expimp .upload-window input{width:initial}.bot--expimp .bot-window{color:#fff}.bot--import-div .bot--btn{background:#8f8;color:#080}#bot--impSep{width:30px}#bot--expName{width:130px}.bot--export-div,.bot--import-div{position:relative;width:50%}.bot--export-div .bot--btn{background:#f88;color:#800}.bot--export-div{margin-right:10px}.upload-btn{fill:#800}.upload-content{margin-top:10px}.upload-content .input-container{margin-bottom:10px}.upload-temp{grid-column:2/4;grid-row:end;margin-top:10px}.upload-window .private-div{display:flex;align-items:center;justify-content:center}.search-btn{fill:#080}.search-window{height:500px}.icon-btn{width:30px;height:30px;position:relative;display:flex;justify-content:center;align-items:center}.icon-btn>svg{width:30px}.bot-window{position:absolute;left:40px;bottom:30px;width:400px;cursor:auto;padding:10px;font-weight:400;z-index:11}.bot-window .top-bar{display:flex;justify-content:space-between;align-items:center;font-size:1.2em;font-weight:700;margin-bottom:10px}.bot-unshown,.bot-window.off{display:none;pointer-events:none}.bot-window .close{margin-left:10px;color:#fff;background:red}.search-window{display:flex;flex-flow:column}.templates-result{overflow:auto}.template{background:#222;padding:5px;position:relative;margin-top:8px}.template-name{font-weight:700}.template-author{color:#888}.template-peek{color:#bbb;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;margin:5px 0}.template .result-msg{margin-top:0}.template.private .template-name svg{width:12px;margin-left:6px;fill:#fff}.template.private{background:#121212}.bot-temp-apply,.bot-temp-menu{fill:#aaa;position:absolute;cursor:pointer}.bot-temp-apply{margin:0 5px;right:0;top:5px}.bot-temp-menu{left:0}.template-menu{width:100px;left:0;top:10px;position:absolute;background:#000a;z-index:1}.template-option{margin:0!important;padding:5px 0;border-bottom:1px solid #555}textarea{width:100%;resize:none}select{cursor:pointer}.bot--box-l2{margin-left:20px}.bot--box-l3{margin-left:30px}#botPanel label.unactive{color:#aaa}.bot-condits-switch{position:absolute;right:0}#botPanel .btn-on{background:green}.unactive-form{display:none}.cond-form{margin-top:30px}.cond-form .input-container{display:flex;flex-flow:column;align-items:flex-start;width:45%}.cond-control{font-weight:700}.cond-form input{width:100%;margin-left:0!important}.bot--cond-item{display:flex}.bot--cond-item>*{width:50%;height:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:2px}.then-part{background:#f779}.necessary_submit{display:none}.templates-modes-div{margin-top:10px;display:flex;justify-content:space-between}.queue-icon{margin-right:6px;cursor:pointer}.editInput{width:100%;box-sizing:border-box}.invalid-item{color:#fff;background:#f22}.begin-div{margin-top:10px}.bot-warning{background:rgba(236,178,18,.356);padding:8px;font-size:.8rem;margin-bottom:8px;display:flex;justify-content:space-between}.bot-warning.closed{display:none}.bot-close-warning{font-weight:700;cursor:pointer}.warning-screen{position:absolute;z-index:10;background:rgba(0,0,0,.842);display:flex;flex-flow:column;width:100%;height:100%;justify-content:center;align-items:center;top:0;left:0}.warning-btns{display:flex;flex-flow:row;margin-top:20px}.warning-btns .bot--btn{flex:1;text-align:center;width:120px}.warning-ok{margin:0 10px}.warning-cancel{background:0 0;margin:0 10px}.warning-info{text-align:center;padding:0 30px}`;
+                const css = `#botPanel{color:#fff;padding:10px;z-index:1000;position:absolute;width:450px;box-sizing:border-box;font-family:roboto,arial}#botPanel,.bot-window{background:#000d}#botPanel.right{right:0}#botPanel.right .bot-window{right:30px;left:initial}.editMode{border:1px solid #c33}.update-toolbar{display:none;justify-content:space-between;padding-top:10px;margin-top:10px;border-top:1px solid #c33}.editMode .update-toolbar{display:flex}.temp-update-label{color:#aaa;font-size:.8em}.temp-update-name{font-weight:700;width:100%;background:0 0;border:none;border-bottom:1px solid #555;color:#fff;font-size:.9rem}.temp-update-name:focus{border-bottom:1px solid #fff}.temp-updating-editables{margin-top:3px;display:flex}.update-toolbar .private-switch{cursor:pointer;fill:#666}.update-toolbar .private-switch.true{fill:#fff}#botPanel input,#botPanel textarea{box-sizing:border-box}#botPanel label,#botPanel label *{cursor:pointer}.top-btns{margin-left:10px;fill:#fff}.side-switch{padding:2px!important}.sign-window{top:0;bottom:initial!important}.sign-window .bot--btn{margin-top:10px}.bot-flick{display:flex;justify-content:center;align-items:flex-end;padding:5px 8px;color:#aaa;cursor:pointer}.bot-flick.active{border-bottom:2px solid #ff5151;color:#fff}.bot-flick:nth-of-type(2){margin-left:10px}.user-content{display:flex;flex-flow:column;justify-content:center;margin-top:8px}.user-container{display:flex;align-items:center}.login-container{margin-left:10px;padding:5px}.bot-svg-icon{margin-right:5px;width:1.3em;fill:#fff}.bot-list-item .bot-svg-icon{margin-right:10px;width:20px;fill:#aaa}.update-toolbar .bot--btn .bot-svg-icon{width:15px;fill:#fff;margin-right:5px}.update-toolbar .bot--btn{display:flex;align-items:center}.bot-list-item{display:flex;justify-content:left!important;align-items:center;padding:6px;background:0 0;text-align:left;color:#fff;border:none;border-top:1px solid #333;font-size:14px;cursor:pointer;width:initial!important}.bot-list-item:hover{background:#4449}.inactive-btn{background:#666!important;pointer-events:none}.inactive-btn::after{content:'...'}.bot--btn.disabled-btn{background:0 0!important}.input-container{display:flex;align-items:center;justify-content:center}.sign-window .input-container{margin-top:5px}.input-container input{flex:1;margin-left:5px}.result-msg{color:#6f6;margin-top:5px}.result-msg.wrong{color:#f66}.form-input-label{margin-top:0!important}.bot-credits{color:#555;right:10px;position:absolute;font-size:15px;display:flex;flex-flow:column;align-items:flex-end}.bot-by{font-size:11px;color:#555}#bot--all-without-hide-btn{display:flex;flex-flow:column;justify-content:center;margin:10px 0 0}.bot--list{max-height:20vh;overflow:auto}.bot--container{display:flex;justify-content:space-between;align-items:center}.bot--queue-item{padding:2px;background:#fff9;color:#000;border-top:1px solid #777;max-width:100%;overflow:hidden;position:relative;text-overflow:ellipsis;white-space:nowrap}.bot--queue-item.bot--cond-item{padding:0}.bot--list-active-el{background:#fffc}.bot--list-active-el::after{content:'';position:absolute;right:0;top:0;height:100%;width:25px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' fill='%23f55' viewBox='0 0 640 640' shape-rendering='geometricPrecision' text-rendering='geometricPrecision' image-rendering='optimizeQuality' fill-rule='evenodd' clip-rule='evenodd'%3E%3Cpath d='M153.581 320L486.42 640.012V-.012L153.581 320z'/%3E%3C/svg%3E");background-position:left}.bot--queue-item{font-size:15px}#bot--rate{margin:10px 0 0;color:#fff}#bot--rate-controller{cursor:pointer;width:100%}#bot--rate-gauge{font-weight:700}.onOffSwitches{display:flex;margin-bottom:10px}.onOffSwitches>*{flex:1 0 40px}.bot-options{display:flex;flex-flow:column}.section-container{display:grid;grid-template-columns:100%}.section-container.with-border{border-top:2px solid #333;padding-top:10px;margin:10px 0 7px}.section-content{display:flex;flex-flow:column;position:relative}.hide-section-btn{border:none;padding:0 5px;margin:-20px 0 10px;justify-self:center;background:#000;color:#555;font-size:.8rem;display:flex;align-items:center;cursor:pointer}.hide-section-btn svg{width:12px;fill:#555;transform:rotateZ(90deg)}.hide-section-btn:hover{color:#bbb!important}.hide-section-btn:hover>svg{fill:#bbb!important}.section-container.off>.section-content{display:none}.section-container.off>.hide-section-btn{color:#888}.section-container.off>.hide-section-btn>svg{transform:rotateZ(0);fill:#888}.bot--btn{padding:5px;background:#da1a1a;color:#fff;border:2px solid #fff;cursor:pointer;font-weight:700}.bot--switch{padding:10px;flex:3 0 200px}.bot--remove-queue{padding:2px 6px}.bot--list-control{display:flex;justify-content:space-between;align-items:center;margin:5px 0 5px}.server-btn{margin-bottom:15px!important}.bot--expimp .bot-window{left:210px}.bot--expimp{display:flex}.bot--expimp .icon-btn{width:100%}.bot--expimp .bot-svg-icon{height:130%;margin-right:0;fill:inherit}.bot--export-div>*,.import-top>*{margin-bottom:5px}.bot--expimp input{width:100%}.bot--expimp .upload-window input{width:initial}.bot--expimp .bot-window{color:#fff}.bot--import-div .bot--btn{background:#8f8;color:#080}#bot--impSep{width:30px}#bot--expName{width:130px}.bot--export-div,.bot--import-div{position:relative;width:50%}.bot--export-div .bot--btn{background:#f88;color:#800}.bot--export-div{margin-right:10px}.upload-btn{fill:#800}.upload-content{margin-top:10px}.upload-content .input-container{margin-bottom:10px}.upload-temp{grid-column:2/4;grid-row:end;margin-top:10px}.upload-window .private-div{display:flex;align-items:center;justify-content:center}.search-btn{fill:#080}.search-window{height:500px}.icon-btn{width:30px;height:30px;position:relative;display:flex;justify-content:center;align-items:center}.icon-btn>svg{width:30px}.bot-window{position:absolute;left:40px;bottom:30px;width:400px;cursor:auto;padding:10px;font-weight:400;z-index:11}.bot-window .top-bar{display:flex;justify-content:space-between;align-items:center;font-size:1.2em;font-weight:700;margin-bottom:10px}.bot-unshown,.bot-window.off{display:none;pointer-events:none}.bot-window .close{margin-left:10px;color:#fff;background:red}.search-window{display:flex;flex-flow:column}.templates-result{overflow:auto}.template{background:#222;padding:5px;position:relative;margin-top:8px}.template-name{font-weight:700}.template-author{color:#888}.template-peek{color:#bbb;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;margin:5px 0}.template .result-msg{margin-top:0}.template.private .template-name svg{width:12px;margin-left:6px;fill:#fff}.template.private{background:#121212}.bot-temp-apply,.bot-temp-menu{fill:#aaa;position:absolute;cursor:pointer}.bot-temp-apply{margin:0 5px;right:0;top:5px}.bot-temp-menu{left:0}.template-menu{width:100px;left:0;top:10px;position:absolute;background:#000a;z-index:1}.template-option{margin:0!important;padding:5px 0;border-bottom:1px solid #555}textarea{width:100%;resize:none}select{cursor:pointer}.bot--box-l2{margin-left:20px}.bot--box-l3{margin-left:30px}#botPanel label.unactive{color:#aaa}.bot-condits-switch{position:absolute;right:0}#botPanel .btn-on{background:green}.unactive-form{display:none}.cond-form{margin-top:30px}.cond-form .input-container{display:flex;flex-flow:column;align-items:flex-start;width:45%}.cond-control{font-weight:700}.cond-form input{width:100%;margin-left:0!important}.bot--cond-item{display:flex}.bot--cond-item>*{width:50%;height:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:2px}.then-part{background:#f779}.necessary_submit{display:none}.templates-modes-div{margin-top:10px;display:flex;justify-content:space-between}.queue-icon{margin-right:6px;cursor:pointer}.editInput{width:100%;box-sizing:border-box}.invalid-item{color:#fff;background:#f22}.begin-div{margin-top:10px}.bot-warning{background:rgba(236,178,18,.356);padding:8px;font-size:.8rem;margin-bottom:8px;display:flex;justify-content:space-between}.bot-warning.closed{display:none}.bot-close-warning{font-weight:700;cursor:pointer}.warning-screen{position:absolute;z-index:10;background:rgba(0,0,0,.842);display:flex;flex-flow:column;width:100%;height:100%;justify-content:center;align-items:center;top:0;left:0}.warning-btns{display:flex;flex-flow:row;margin-top:20px}.warning-btns .bot--btn{flex:1;text-align:center;width:120px}.warning-ok{margin:0 10px}.warning-cancel{background:0 0;margin:0 10px}.warning-info{text-align:center;padding:0 30px}`;
                 // active el - border: 1px solid #f55;
 
                 const style = document.createElement('style');
@@ -1655,10 +1658,7 @@ bot ? bot.stop() : 0;
             },
 
             insert(forceFreshMsg = false) {
-                if (this.listLength === 0) {
-                    bot.stop();
-                    bot.cp.showAlert('No messages in queue. Turn off queue on the top if you dont want queue running.', {okOnly: true});
-                } else {
+                if (this.listLength !== 0) {
                     this.checkCounters()
 
                     if (this.isRandom && !this.afterRandomChecked) {
@@ -1852,7 +1852,7 @@ bot ? bot.stop() : 0;
             },
 
             confirmListRemove(cb){
-                if(this[this.presentListLength] === 1 || !cb) return
+                if(this[this.presentListLength] === 0 || !cb) return
 
                 bot.cp.showAlert('This will clear list of messages. Proceed?', {
                     okBtnText: 'Clear list',
@@ -1881,6 +1881,9 @@ bot ? bot.stop() : 0;
             },
 
             mutateTextArr(newArr, forceMode = false) {
+                if(newArr.length && typeof newArr[0] === 'string')
+                    newArr = newArr.filter(msg => msg !== '')
+
                 if(!forceMode){
                     this[this.presentArr] = newArr;
                 } else {
@@ -1919,30 +1922,25 @@ bot ? bot.stop() : 0;
 
             removeQueue() {
                 this.confirmListRemove(() => {
-                    this.mutateTextArr(!this.isConditsShown ? ['🎈'] : [...this.initCondArr])
+                    this.mutateTextArr([])
                 });
             },
 
             updateListItem(id){
-                if(!this.isConditsShown){
-                    const itemElement = this.list.children[id];
-                    if(itemElement){
-                        itemElement.innerHTML = '';
-                        const el = this.createListItem(this[this.presentArr][id]);
-                        itemElement.appendChild(el);
-                    }
-                } else {
-                    const itemElement = this.condList.children[id];
-                    if(itemElement){
-                        itemElement.innerHTML = '';
-                        const el = this.createListItem(this[this.presentArr][id]);
-                        itemElement.appendChild(el);
-                    }
+                let itemElement
+                if(!this.isConditsShown)
+                    itemElement = this.list.children[id];
+                else
+                    itemElement = this.condList.children[id];
+
+                if(itemElement){
+                    itemElement.innerHTML = '';
+                    const el = this.createListItem(this[this.presentArr][id]);
+                    itemElement.appendChild(el);
                 }
             },
 
             createListItem(message, id = null, forceMode = false){
-                
                 if(forceMode ? forceMode === 'queue' : !this.isConditsShown){
                     let container = null;
                     if(typeof id !== 'number'){
@@ -2002,12 +2000,11 @@ bot ? bot.stop() : 0;
             },
 
             updateList(forceMode = false) {
-                
                 if(forceMode ? forceMode === 'queue' : !this.isConditsShown){
                     this.list.innerHTML = '';
 
                     const frag = document.createDocumentFragment();
-
+                    
                     this.textArr.map((item, id) => {
                         if (item && item !== ' ' && item !== '\n') {
                             const itemNode = this.createListItem(item, parseInt(id), forceMode);

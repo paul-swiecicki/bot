@@ -222,10 +222,19 @@
     margin-top: 0 !important;
 }
 
-.bot--title {
-    display: inline-block;
+.bot-credits {
+    color: #555;
     right: 10px;
-    color: #fff6;
+    position: absolute;
+    font-size: 15px;
+    display: flex;
+    flex-flow: column;
+    align-items: flex-end;
+}
+
+.bot-by {
+    font-size: 11px;
+    color: #555;
 }
 
 #bot--all-without-hide-btn {
