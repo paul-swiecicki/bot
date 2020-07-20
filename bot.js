@@ -1352,6 +1352,9 @@ bot ? bot.stop() : 0;
                             this.user.setLoggedState(user)
                         }
                     })
+                    .catch(err => {
+                        console.log(err);
+                    })
                 };
 
                 authCheck();
@@ -1480,6 +1483,8 @@ bot ? bot.stop() : 0;
                             template: bot.text.packData(),
                             autoSave: true
                         })
+                    }).catch(err => {
+                        console.log(err);
                     })
                 }
 
@@ -1487,18 +1492,24 @@ bot ? bot.stop() : 0;
                     const user = this.user;
                     if(user.isLoggedIn){
                         if(!user.isUpdatingTemplate){
-                            const blob = new Blob([JSON.stringify({
-                                name: '__autosave__',
-                                template: bot.text.packData(),
-                                autoSave: true
-                            })], {type: 'application/json; charset=UTF-8'});
-
-                            navigator.sendBeacon(backendUrl+'templates/autoSave', blob)
+                            try {
+                                const blob = new Blob([JSON.stringify({
+                                    name: '__autosave__',
+                                    template: bot.text.packData(),
+                                    autoSave: true
+                                })], {type: 'application/json; charset=UTF-8'});
+    
+                                navigator.sendBeacon(backendUrl+'templates/autoSave', blob)
+                            } catch (err) {
+                                console.log(err);
+                            }
                         }
                     } else console.log('Cant post autosave, user doesnt appear to be logged in')
                 })
 
-                const title = makeEl('bot-title', 'BloonBot v' + bot.version, 'span')
+                const title = makeEl('bot-title', 'BloonBot v' + bot.version, 'a')
+                title.href = 'https://bit.ly/bloonbot'
+                title.target = 'blank'
                 const byDWS = makeEl('bot-by', 'by Dallow Wish Studios', 'a')
                 byDWS.href = 'https://www.facebook.com/PaprykarzPotworowski'
                 byDWS.target = 'blank'

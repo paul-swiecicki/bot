@@ -22,207 +22,215 @@ botCode = 'bot&&bot.stop();{const t=(t,e)=>{const i=t.classList.contains(\"btn-o
 #######################################################################
 # !!!!!!!!!!!!! BEFORE EXEing CHECK "fastmode", "noinstall"
 
-window = tk.Tk()
-keyb = Controller()
+def main():
+    window = tk.Tk()
+    keyb = Controller()
 
-# from tqdm import tqdm_gui
+    # from tqdm import tqdm_gui
 
-# def find_file(root_folder, rex):
-#     for root,dirs,files in os.walk(root_folder):
-#         for f in files:
-#             result = re.search(rex, f)
-#             if result:
-#                 return os.path.join(root, f)
+    # def find_file(root_folder, rex):
+    #     for root,dirs,files in os.walk(root_folder):
+    #         for f in files:
+    #             result = re.search(rex, f)
+    #             if result:
+    #                 return os.path.join(root, f)
 
-def find_folder(root_folder, rex):
-    # for root,dirs,files in tqdm_gui(os.walk(root_folder), total=):
-    for root,dirs,files in os.walk(root_folder): # ,files
-        for d in dirs:
-            result = re.search(rex, d)
-            if result:
-                print(result)
-                return os.path.join(root, d)
+    def destroyWindow(window):
+        window.deiconify()
+        window.destroy()
+        window.quit()
 
-# path = find_folder('C:\\', '^Mozilla Firefox$')
-# print(path)
+    def find_folder(root_folder, rex):
+        # for root,dirs,files in tqdm_gui(os.walk(root_folder), total=):
+        for root,dirs,files in os.walk(root_folder): # ,files
+            for d in dirs:
+                result = re.search(rex, d)
+                if result:
+                    print(result)
+                    return os.path.join(root, d)
+
+    # path = find_folder('C:\\', '^Mozilla Firefox$')
+    # print(path)
 
 
-def isProcessRunning(processName):
-    return processName in (p.name() for p in psutil.process_iter())
+    def isProcessRunning(processName):
+        return processName in (p.name() for p in psutil.process_iter())
 
-# browserPaths = {
-#     'firefox': r'C:\Program Files\Mozilla Firefox\firefox.exe',
-#     'chrome': r'C:\Program Files (x86)\Google\Chrome\Application\chrome.exe',
-#     'chrome2': r'C:\Program Files\Google\Chrome\Application\chrome.exe'
-# }
+    # browserPaths = {
+    #     'firefox': r'C:\Program Files\Mozilla Firefox\firefox.exe',
+    #     'chrome': r'C:\Program Files (x86)\Google\Chrome\Application\chrome.exe',
+    #     'chrome2': r'C:\Program Files\Google\Chrome\Application\chrome.exe'
+    # }
 
-def openTab(browser = 'firefox'):
-    if browser == 'firefox':
-        path = find_folder('C:\\', '^Mozilla Firefox$')
-        fullPath = path + '\\firefox.exe'
-        print(fullPath)
-        subprocess.call([fullPath, '-new-tab', siteUrl])
-    elif browser == 'chrome':
-        path = find_folder('C:\\', '^Chrome$')
-        subprocess.call([path+'\\chrome.exe', '-new-tab', siteUrl])
+    def openTab(browser = 'firefox'):
+        if browser == 'firefox':
+            path = find_folder('C:\\', '^Mozilla Firefox$')
+            fullPath = path + '\\firefox.exe'
+            print(fullPath)
+            subprocess.call([fullPath, '-new-tab', siteUrl])
+        elif browser == 'chrome':
+            path = find_folder('C:\\', '^Chrome$')
+            subprocess.call([path+'\\chrome.exe', '-new-tab', siteUrl])
 
-    return browser
+        return browser
 
-def focusWindow(title):
-    try:
-        browserWindow = gw.getWindowsWithTitle(title)[0]
-        browserWindow.activate()
-        if not fastMode: time.sleep(0.5)
-        browserWindow.maximize()
-        if not fastMode: time.sleep(0.5)
-        return True
-    except:
-        return False
-
-#######################################################################
-
-window.iconbitmap('launcher/bloon.ico')
-
-# zezwalaj na wklejanie do firefoxa
-fastMode = False #!!!!!!!!!!!!!!!!!!!!!!!!
-noInstall = False
-fastModeSpeed = 1
-
-if not noInstall:
-    website = '6obcy'
-    msgWindowsEnabled = True
-
-    window.eval('tk::PlaceWindow %s center' % window.winfo_toplevel())
-    window.withdraw()
-    def messageWindow(type, title, msg):
-        if(msgWindowsEnabled):
-            if type == 'error':
-                messagebox.showerror(title, msg)
-            elif type == 'warning':
-                messagebox.showwarning(title, msg)
-            else:
-                messagebox.showinfo(title, msg)
-
-    sites = {
-        '6obcy': 'https://6obcy.org/rozmowa',
-        'e-chat.co': 'echaturl',
-        'test': 'https://6obcy.org'
-    }
-    siteUrl = sites.get(website, None)
-
-    firefoxFound = True
-
-    if siteUrl is None:
-        messageWindow('error', 'BloonBot launcher', 'No such website available')
-    else:
-        messageWindow('warning' ,'BloonBot launcher', 'Bot installation works best on Firefox. \n Do not use your mouse after you confirm this window. \n Installing will take about 30 seconds.')
-        isFirefoxRunning = isProcessRunning('firefox.exe')
-        isChromeRunning = isProcessRunning('chrome.exe')
-        if not fastMode: time.sleep(2)
-
+    def focusWindow(title):
         try:
-            if isFirefoxRunning:
-                launchedBrowser = openTab('firefox')
-            elif isChromeRunning:
-                launchedBrowser = openTab('chrome')
-            else:
-                launchedBrowser = openTab('firefox')
+            browserWindow = gw.getWindowsWithTitle(title)[0]
+            browserWindow.activate()
+            if not fastMode: time.sleep(0.5)
+            browserWindow.maximize()
+            if not fastMode: time.sleep(0.5)
+            return True
         except:
+            return False
+
+    #######################################################################
+
+    window.iconbitmap('launcher/bloon.ico')
+
+    # zezwalaj na wklejanie do firefoxa
+    fastMode = False #!!!!!!!!!!!!!!!!!!!!!!!!
+    noInstall = False
+    fastModeSpeed = 1
+
+    if not noInstall:
+        website = '6obcy'
+        msgWindowsEnabled = True
+
+        window.eval('tk::PlaceWindow %s center' % window.winfo_toplevel())
+        window.withdraw()
+        def messageWindow(type, title, msg):
+            if(msgWindowsEnabled):
+                if type == 'error':
+                    messagebox.showerror(title, msg)
+                elif type == 'warning':
+                    messagebox.showwarning(title, msg)
+                else:
+                    messagebox.showinfo(title, msg)
+
+        sites = {
+            '6obcy': 'https://6obcy.org/rozmowa',
+            'e-chat.co': 'echaturl',
+            'test': 'https://6obcy.org'
+        }
+        siteUrl = sites.get(website, None)
+
+        firefoxFound = True
+
+        if siteUrl is None:
+            messageWindow('error', 'BloonBot launcher', 'No such website available')
+        else:
+            if not messagebox.askokcancel('BloonBot launcher', 'Do not use your mouse after you confirm this window. \nInstalling will take about 30 seconds. \nConfirm installing:'):
+                destroyWindow(window)
+                return
+            isFirefoxRunning = isProcessRunning('firefox.exe')
+            isChromeRunning = isProcessRunning('chrome.exe')
+            if not fastMode: time.sleep(2)
+
             try:
-                launchedBrowser = openTab('chrome')
+                if isFirefoxRunning:
+                    launchedBrowser = openTab('firefox')
+                elif isChromeRunning:
+                    launchedBrowser = openTab('chrome')
+                else:
+                    launchedBrowser = openTab('firefox')
             except:
-                webbrowser.open_new(siteUrl)
-                launchedBrowser = 'chrome'
-                # firefoxFound = False
-                # messageWindow('error', 'BloonBot launcher', 'Firefox or Chrome can not be found.')
-                # sys.exit()
-                # webbrowser.open_new(siteUrl)
-            firefoxFound = False
+                try:
+                    launchedBrowser = openTab('chrome')
+                except:
+                    webbrowser.open_new(siteUrl)
+                    launchedBrowser = 'chrome'
+                    # firefoxFound = False
+                    # messageWindow('error', 'BloonBot launcher', 'Firefox or Chrome can not be found.')
+                    # sys.exit()
+                    # webbrowser.open_new(siteUrl)
+                firefoxFound = False
+                
+            if launchedBrowser == 'firefox':
+                sleeps = {
+                    'browserLoad': 7,
+                    'consoleOpen': 3,
+                    'paste': 2,
+                    'codeLaunch': 2,
+                    'consoleClose': 2,
+                    'firefoxBeforePasteConfirm': 1,
+                    'keyPressTime': 0.5
+                }
+                if not isFirefoxRunning:
+                    sleeps['browserLoad'] = 10
+            else:
+                sleeps = {
+                    'browserLoad': 10,
+                    'consoleOpen': 7,
+                    'paste': 3,
+                    'codeLaunch': 3,
+                    'consoleClose': 2,
+                    'keyPressTime': 0.5
+                }
+                if not isChromeRunning:
+                    sleeps['browserLoad'] = 14
+
+            if fastMode:
+                for k, v in sleeps.items():
+                    sleeps[k] = fastModeSpeed
+                    if k == 'keyPressTime':
+                        sleeps[k] = 0.1
             
-        if launchedBrowser == 'firefox':
-            sleeps = {
-                'browserLoad': 7,
-                'consoleOpen': 3,
-                'paste': 2,
-                'codeLaunch': 2,
-                'consoleClose': 2,
-                'firefoxBeforePasteConfirm': 1,
-                'keyPressTime': 0.5
-            }
-            if not isFirefoxRunning:
-                sleeps['browserLoad'] = 10
-        else:
-            sleeps = {
-                'browserLoad': 10,
-                'consoleOpen': 7,
-                'paste': 3,
-                'codeLaunch': 3,
-                'consoleClose': 2,
-                'keyPressTime': 0.5
-            }
-            if not isChromeRunning:
-                sleeps['browserLoad'] = 14
+            tooLongWait = False
+            i = 0
+            while not isProcessRunning(launchedBrowser+'.exe'):
+                print(i)
+                i+=1
+                if(i > 15):
+                    tooLongWait = True
+                    break
+                time.sleep(1)
 
-        if fastMode:
-            for k, v in sleeps.items():
-                sleeps[k] = fastModeSpeed
-                if k == 'keyPressTime':
-                    sleeps[k] = 0.1
-        
-        tooLongWait = False
-        i = 0
-        while not isProcessRunning(launchedBrowser+'.exe'):
-            print(i)
-            i+=1
-            if(i > 15):
-                tooLongWait = True
-                break
-            time.sleep(1)
+            if not tooLongWait: time.sleep(sleeps['browserLoad'])
+            # pyautogui.click(500, 400)
+            focusWindow(launchedBrowser)
+            # time.sleep(sleeps['focus'])
+            with keyb.pressed(Key.ctrl):
+                with keyb.pressed(Key.shift):
+                    if launchedBrowser == 'firefox': consoleKey = 'k' # firefox
+                    else: consoleKey = 'j' #chrome
 
-        if not tooLongWait: time.sleep(sleeps['browserLoad'])
-        # pyautogui.click(500, 400)
-        focusWindow(launchedBrowser)
-        # time.sleep(sleeps['focus'])
-        with keyb.pressed(Key.ctrl):
-            with keyb.pressed(Key.shift):
-                if launchedBrowser == 'firefox': consoleKey = 'k' # firefox
-                else: consoleKey = 'j' #chrome
+                    keyb.press(consoleKey)
+                    time.sleep(sleeps['consoleOpen'])
+                    keyb.release(consoleKey)
 
-                keyb.press(consoleKey)
-                time.sleep(sleeps['consoleOpen'])
-                keyb.release(consoleKey)
+            pyperclip.copy(botCode)
 
-        pyperclip.copy(botCode)
+            if launchedBrowser == 'firefox':
+                time.sleep(sleeps['firefoxBeforePasteConfirm'])
+                pyautogui.typewrite('zezwalaj na wklejanie', interval=0.02)
+                pyautogui.hotkey('ctrl', 'a')
 
-        if launchedBrowser == 'firefox':
-            time.sleep(sleeps['firefoxBeforePasteConfirm'])
-            pyautogui.typewrite('zezwalaj na wklejanie', interval=0.02)
-            pyautogui.hotkey('ctrl', 'a')
+            time.sleep(sleeps['paste']) # pasting code after console is open
+            focusWindow(launchedBrowser)
+            keyb.press(Key.ctrl)
+            keyb.press('v')
+            time.sleep(sleeps['keyPressTime'])
+            keyb.release(Key.ctrl)
+            keyb.release('v')
 
-        time.sleep(sleeps['paste']) # pasting code after console is open
-        focusWindow(launchedBrowser)
-        keyb.press(Key.ctrl)
-        keyb.press('v')
-        time.sleep(sleeps['keyPressTime'])
-        keyb.release(Key.ctrl)
-        keyb.release('v')
+            time.sleep(sleeps['codeLaunch']) # pressing enter after pasting code to console
+            focusWindow(launchedBrowser)
+            keyb.press(Key.enter)
+            time.sleep(sleeps['keyPressTime'])
+            keyb.release(Key.enter)
 
-        time.sleep(sleeps['codeLaunch']) # pressing enter after pasting code to console
-        focusWindow(launchedBrowser)
-        keyb.press(Key.enter)
-        time.sleep(sleeps['keyPressTime'])
-        keyb.release(Key.enter)
+            time.sleep(sleeps['consoleClose']) # closing console after pressing enter
+            focusWindow(launchedBrowser)
+            keyb.press(Key.f12)
+            time.sleep(sleeps['keyPressTime'])
+            keyb.release(Key.f12)
+            if firefoxFound:
+                messageWindow('info', 'BloonBot launcher', 'BloonBot has been installed. You can safely use your mouse now.')
+            else:
+                messageWindow('warning', 'BloonBot launcher', 'Firefox/Chrome not found. If bot is not correctly installed install one of these browsers and try again.')
 
-        time.sleep(sleeps['consoleClose']) # closing console after pressing enter
-        focusWindow(launchedBrowser)
-        keyb.press(Key.f12)
-        time.sleep(sleeps['keyPressTime'])
-        keyb.release(Key.f12)
-        if firefoxFound:
-            messageWindow('info', 'BloonBot launcher', 'BloonBot has been installed. You can safely use your mouse now.')
-        else:
-            messageWindow('warning', 'BloonBot launcher', 'Firefox/Chrome not found. If bot is not correctly installed install one of these browsers and try again.')
+        destroyWindow(window)
 
-    window.deiconify()
-    window.destroy()
-    window.quit()
+main()
