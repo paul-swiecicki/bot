@@ -68,8 +68,8 @@ if(bot) bot.stop()
 
     var bot = {
 
-        version: '0.3.4',
-        devMode: true,
+        version: '0.3.5',
+        devMode: false,
         botInterval: null,
         fakeTypeInterval: null,
         condInterval: null,
@@ -192,7 +192,6 @@ if(bot) bot.stop()
                     if(typeof el === 'string') return this[el]
                     return el
                 }
-
                 const appendEl = (el, parentEl) => { // tests both el and parentEl for being string
                     elThis(parentEl).appendChild(elThis(el))
                 }
@@ -1490,7 +1489,7 @@ if(bot) bot.stop()
 
                 this.stylize();
 
-                sortablejs.addEventListener('load', () => { //! react-friendly remove
+                sortablejs.addEventListener('load', () => {
                     Sortable.create(this.list, {
                         group: 'botQueue',
                         animation: 100,
@@ -1528,7 +1527,7 @@ if(bot) bot.stop()
                             bot.text.mutateTextArr(newTextArr);
                         }
                     })
-                }) //!
+                })
             },
 
             handleConditsSwitch(e){
@@ -1551,8 +1550,7 @@ if(bot) bot.stop()
             },
 
             stylize() {
-                // const css = ''
-                const css = `#botPanel{color:#fff;padding:10px;z-index:1000;position:absolute;width:450px;box-sizing:border-box;font-family:roboto,arial}#botPanel,.bot-window{background:#000d}#botPanel.right{right:0}#botPanel.right .bot-window{right:30px;left:initial}.editMode{border:1px solid #c33}.update-toolbar{display:none;justify-content:space-between;padding-top:10px;margin-top:10px;border-top:1px solid #c33}.editMode .update-toolbar{display:flex}.temp-update-label{color:#aaa;font-size:.8em}.temp-update-name{font-weight:700;width:100%;background:0 0;border:none;border-bottom:1px solid #555;color:#fff;font-size:.9rem}.temp-update-name:focus{border-bottom:1px solid #fff}.temp-updating-editables{margin-top:3px;display:flex}.update-toolbar .private-switch{cursor:pointer;fill:#666}.update-toolbar .private-switch.true{fill:#fff}#botPanel input,#botPanel textarea{box-sizing:border-box}#botPanel label,#botPanel label *{cursor:pointer}.top-btns{margin-left:10px;fill:#fff}.side-switch{padding:2px!important}.sign-window{top:0;bottom:initial!important}.sign-window .bot--btn{margin-top:10px}.bot-flick{display:flex;justify-content:center;align-items:flex-end;padding:5px 8px;color:#aaa;cursor:pointer}.bot-flick.active{border-bottom:2px solid #ff5151;color:#fff}.bot-flick:nth-of-type(2){margin-left:10px}.user-content{display:flex;flex-flow:column;justify-content:center;margin-top:8px}.user-container{display:flex;align-items:center}.login-container{margin-left:10px;padding:5px}.bot-svg-icon{margin-right:5px;width:1.3em;fill:#fff}.bot-list-item .bot-svg-icon{margin-right:10px;width:20px;fill:#aaa}.update-toolbar .bot--btn .bot-svg-icon{width:15px;fill:#fff;margin-right:5px}.update-toolbar .bot--btn{display:flex;align-items:center}.bot-list-item{display:flex;justify-content:left!important;align-items:center;padding:6px;background:0 0;text-align:left;color:#fff;border:none;border-top:1px solid #333;font-size:14px;cursor:pointer;width:initial!important}.bot-list-item:hover{background:#4449}.inactive-btn{background:#666!important;pointer-events:none}.inactive-btn::after{content:'...'}.bot--btn.disabled-btn{background:0 0!important}.input-container{display:flex;align-items:center;justify-content:center}.sign-window .input-container{margin-top:5px}.input-container input{flex:1;margin-left:5px}.result-msg{color:#6f6;margin-top:5px}.result-msg.wrong{color:#f66}.form-input-label{margin-top:0!important}.bot-credits{color:#555;right:10px;position:absolute;font-size:15px;display:flex;flex-flow:column;align-items:flex-end}.bot-by{font-size:11px;color:#555}#bot--all-without-hide-btn{display:flex;flex-flow:column;justify-content:center;margin:10px 0 0}.bot--list{max-height:20vh;overflow:auto}.bot--container{display:flex;justify-content:space-between;align-items:center}.bot--queue-item{padding:2px;background:#fff9;color:#000;border-top:1px solid #777;max-width:100%;overflow:hidden;position:relative;text-overflow:ellipsis;white-space:nowrap}.bot--queue-item.bot--cond-item{padding:0}.bot--list-active-el{background:#fffc}.bot--list-active-el::after{content:'';position:absolute;right:0;top:0;height:100%;width:25px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' fill='%23f55' viewBox='0 0 640 640' shape-rendering='geometricPrecision' text-rendering='geometricPrecision' image-rendering='optimizeQuality' fill-rule='evenodd' clip-rule='evenodd'%3E%3Cpath d='M153.581 320L486.42 640.012V-.012L153.581 320z'/%3E%3C/svg%3E");background-position:left}.bot--queue-item{font-size:15px}#bot--rate{margin:10px 0 0;color:#fff}#bot--rate-controller{cursor:pointer;width:100%}#bot--rate-gauge{font-weight:700}.onOffSwitches{display:flex;margin-bottom:10px}.onOffSwitches>*{flex:1 0 40px}.bot-options{display:flex;flex-flow:column}.section-container{display:grid;grid-template-columns:100%}.section-container.with-border{border-top:2px solid #333;padding-top:10px;margin:10px 0 7px}.section-content{display:flex;flex-flow:column;position:relative}.hide-section-btn{border:none;padding:0 5px;margin:-20px 0 10px;justify-self:center;background:#000;color:#555;font-size:.8rem;display:flex;align-items:center;cursor:pointer}.hide-section-btn svg{width:12px;fill:#555;transform:rotateZ(90deg)}.hide-section-btn:hover{color:#bbb!important}.hide-section-btn:hover>svg{fill:#bbb!important}.section-container.off>.section-content{display:none}.section-container.off>.hide-section-btn{color:#888}.section-container.off>.hide-section-btn>svg{transform:rotateZ(0);fill:#888}.bot--btn{padding:5px;background:#da1a1a;color:#fff;border:2px solid #fff;cursor:pointer;font-weight:700}.bot--switch{padding:10px;flex:3 0 200px}.bot--remove-queue{padding:2px 6px}.bot--list-control{display:flex;justify-content:space-between;align-items:center;margin:5px 0 5px}.server-btn{margin-bottom:15px!important}.bot--expimp .bot-window{left:210px}.bot--expimp{display:flex}.bot--expimp .icon-btn{width:100%}.bot--expimp .bot-svg-icon{height:130%;margin-right:0;fill:inherit}.bot--export-div>*,.import-top>*{margin-bottom:5px}.bot--expimp input{width:100%}.bot--expimp .upload-window input{width:initial}.bot--expimp .bot-window{color:#fff}.bot--import-div .bot--btn{background:#8f8;color:#080}#bot--impSep{width:30px}#bot--expName{width:130px}.bot--export-div,.bot--import-div{position:relative;width:50%}.bot--export-div .bot--btn{background:#f88;color:#800}.bot--export-div{margin-right:10px}.upload-btn{fill:#800}.upload-content{margin-top:10px}.upload-content .input-container{margin-bottom:10px}.upload-temp{grid-column:2/4;grid-row:end;margin-top:10px}.upload-window .private-div{display:flex;align-items:center;justify-content:center}.search-btn{fill:#080}.search-window{height:500px}.icon-btn{width:30px;height:30px;position:relative;display:flex;justify-content:center;align-items:center}.icon-btn>svg{width:30px}.bot-window{position:absolute;left:40px;bottom:30px;width:400px;cursor:auto;padding:10px;font-weight:400;z-index:11}.bot-window .top-bar{display:flex;justify-content:space-between;align-items:center;font-size:1.2em;font-weight:700;margin-bottom:10px}.bot-unshown,.bot-window.off{display:none;pointer-events:none}.bot-window .close{margin-left:10px;color:#fff;background:red}.search-window{display:flex;flex-flow:column}.templates-result{overflow:auto}.template{background:#222;padding:5px;position:relative;margin-top:8px}.template-name{font-weight:700}.template-author{color:#888}.template-peek{color:#bbb;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;margin:5px 0}.template .result-msg{margin-top:0}.template.private .template-name svg{width:12px;margin-left:6px;fill:#fff}.template.private{background:#121212}.bot-temp-apply,.bot-temp-menu{fill:#aaa;position:absolute;cursor:pointer}.bot-temp-apply{margin:0 5px;right:0;top:5px}.bot-temp-menu{left:0}.template-menu{width:100px;left:0;top:10px;position:absolute;background:#000a;z-index:1}.template-option{margin:0!important;padding:5px 0;border-bottom:1px solid #555}textarea{width:100%;resize:none}select{cursor:pointer}.bot--box-l2{margin-left:20px}.bot--box-l3{margin-left:30px}#botPanel label.unactive{color:#aaa}.bot-condits-switch{position:absolute;right:0}#botPanel .btn-on{background:green}.unactive-form{display:none}.cond-form{margin-top:30px}.cond-form .input-container{display:flex;flex-flow:column;align-items:flex-start;width:45%}.cond-control{font-weight:700}.cond-form input{width:100%;margin-left:0!important}.bot--cond-item{display:flex}.bot--cond-item>*{width:50%;height:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:2px}.then-part{background:#f779}.necessary_submit{display:none}.templates-modes-div{margin-top:10px;display:flex;justify-content:space-between}.queue-icon{margin-right:6px;cursor:pointer}.editInput{width:100%;box-sizing:border-box}.invalid-item{color:#fff;background:#f22}.begin-div{margin-top:10px}.bot-warning{background:rgba(236,178,18,.356);padding:8px;font-size:.8rem;margin-bottom:8px;display:flex;justify-content:space-between}.bot-warning.closed{display:none}.bot-close-warning{font-weight:700;cursor:pointer}.warning-screen{position:absolute;z-index:10;background:rgba(0,0,0,.842);display:flex;flex-flow:column;width:100%;height:100%;justify-content:center;align-items:center;top:0;left:0}.warning-btns{display:flex;flex-flow:row;margin-top:20px}.warning-btns .bot--btn{flex:1;text-align:center;width:120px}.warning-ok{margin:0 10px}.warning-cancel{background:0 0;margin:0 10px}.warning-info{text-align:center;padding:0 30px}`;
+                const css = `#botPanel{margin:unset;color:#fff;padding:10px;z-index:1000;position:absolute;width:450px;box-sizing:border-box;font-family:roboto,arial;top:0;line-height:initial}#botPanel,.bot-window{background:#000d}#botPanel.right{right:0}#botPanel.right .bot-window{right:30px;left:initial}.editMode{border:1px solid #c33}.update-toolbar{display:none;justify-content:space-between;padding-top:10px;margin-top:10px;border-top:1px solid #c33}.editMode .update-toolbar{display:flex}.temp-update-label{color:#aaa;font-size:.8em}.temp-update-name{font-weight:700;width:100%;background:0 0;border:none;border-bottom:1px solid #555;color:#fff;font-size:.9rem}.temp-update-name:focus{border-bottom:1px solid #fff}.temp-updating-editables{margin-top:3px;display:flex}.update-toolbar .private-switch{cursor:pointer;fill:#666}.update-toolbar .private-switch.true{fill:#fff}#botPanel input,#botPanel textarea{box-sizing:border-box}#botPanel label,#botPanel label *{cursor:pointer}.top-btns{margin-left:10px;fill:#fff}.side-switch{padding:2px!important}.sign-window{top:0;bottom:initial!important}.sign-window .bot--btn{margin-top:10px}.bot-flick{display:flex;justify-content:center;align-items:flex-end;padding:5px 8px;color:#aaa;cursor:pointer}.bot-flick.active{border-bottom:2px solid #ff5151;color:#fff}.bot-flick:nth-of-type(2){margin-left:10px}.user-content{display:flex;flex-flow:column;justify-content:center;margin-top:8px}.user-container{display:flex;align-items:center}.login-container{margin-left:10px;padding:5px}.bot-svg-icon{margin-right:5px;width:1.3em;fill:#fff}.bot-list-item .bot-svg-icon{margin-right:10px;width:20px;fill:#aaa}.update-toolbar .bot--btn .bot-svg-icon{width:15px;fill:#fff;margin-right:5px}.update-toolbar .bot--btn{display:flex;align-items:center}.bot-list-item{display:flex;justify-content:left!important;align-items:center;padding:6px;background:0 0;text-align:left;color:#fff;border:none;border-top:1px solid #333;font-size:14px;cursor:pointer;width:initial!important}.bot-list-item:hover{background:#4449}.inactive-btn{background:#666!important;pointer-events:none}.inactive-btn::after{content:'...'}.bot--btn.disabled-btn{background:0 0!important}.input-container{display:flex;align-items:center;justify-content:center}.sign-window .input-container{margin-top:5px}.input-container input{flex:1;margin-left:5px}.result-msg{color:#6f6;margin-top:5px}.result-msg.wrong{color:#f66}.form-input-label{margin-top:0!important}.bot-credits{color:#555;right:10px;position:absolute;font-size:15px;display:flex;flex-flow:column;align-items:flex-end}.bot-by,.bot-title{color:#555;text-decoration:none}#bot--all-without-hide-btn{display:flex;flex-flow:column;justify-content:center;margin:10px 0 0}.bot--list{max-height:20vh;overflow:auto}.bot--container{display:flex;justify-content:space-between;align-items:center}.bot--queue-item{padding:2px;background:#fff9;color:#000;border-top:1px solid #777;max-width:100%;overflow:hidden;position:relative;text-overflow:ellipsis;white-space:nowrap}.bot--queue-item.bot--cond-item{padding:0}.bot--list-active-el{background:#fffc}.bot--list-active-el::after{content:'';position:absolute;right:0;top:0;height:100%;width:25px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' fill='%23f55' viewBox='0 0 640 640' shape-rendering='geometricPrecision' text-rendering='geometricPrecision' image-rendering='optimizeQuality' fill-rule='evenodd' clip-rule='evenodd'%3E%3Cpath d='M153.581 320L486.42 640.012V-.012L153.581 320z'/%3E%3C/svg%3E");background-position:left}.bot--queue-item{font-size:15px}#bot--rate{margin:10px 0 0;color:#fff}#bot--rate-controller{cursor:pointer;width:100%}#bot--rate-gauge{font-weight:700}.onOffSwitches{display:flex;margin-bottom:10px}.onOffSwitches>*{flex:1 0 40px}.bot-options{display:flex;flex-flow:column}.section-container{display:grid;grid-template-columns:100%}.section-container.with-border{border-top:2px solid #333;padding-top:10px;margin:10px 0 7px}.section-content{display:flex;flex-flow:column;position:relative}.hide-section-btn{border:none;padding:0 5px;margin:-20px 0 10px;justify-self:center;background:#000;color:#555;font-size:.8rem;display:flex;align-items:center;cursor:pointer}.hide-section-btn svg{width:12px;fill:#555;transform:rotateZ(90deg)}.hide-section-btn:hover{color:#bbb!important}.hide-section-btn:hover>svg{fill:#bbb!important}.section-container.off>.section-content{display:none}.section-container.off>.hide-section-btn{color:#888}.section-container.off>.hide-section-btn>svg{transform:rotateZ(0);fill:#888}.bot--btn{padding:5px;background:#da1a1a;color:#fff;border:2px solid #fff;cursor:pointer;font-weight:700}.bot--switch{padding:10px;flex:3 0 200px}.bot--remove-queue{padding:2px 6px}.bot--list-control{display:flex;justify-content:space-between;align-items:center;margin:5px 0 5px}.server-btn{margin-bottom:15px!important}.bot--expimp .bot-window{left:210px}.bot--expimp{display:flex}.bot--expimp .icon-btn{width:100%}.bot--expimp .bot-svg-icon{height:130%;margin-right:0;fill:inherit}.bot--export-div>*,.import-top>*{margin-bottom:5px}.bot--expimp input{width:100%}.bot--expimp .upload-window input{width:initial}.bot--expimp .bot-window{color:#fff}.bot--import-div .bot--btn{background:#8f8;color:#080}#bot--impSep{width:50px}#bot--expName{width:130px}.bot--export-div,.bot--import-div{position:relative;width:50%}.bot--export-div .bot--btn{background:#f88;color:#800}.bot--export-div{margin-right:10px}.upload-btn{fill:#800}.upload-content{margin-top:10px}.upload-content .input-container{margin-bottom:10px}.upload-temp{grid-column:2/4;grid-row:end;margin-top:10px}.upload-window .private-div{display:flex;align-items:center;justify-content:center}.search-btn{fill:#080}.search-window{height:500px}.icon-btn{width:30px;height:30px;position:relative;display:flex;justify-content:center;align-items:center}.icon-btn>svg{width:30px}.bot-window{position:absolute;left:40px;bottom:30px;width:400px;cursor:auto;padding:10px;font-weight:400;z-index:11}.bot-window .top-bar{display:flex;justify-content:space-between;align-items:center;font-size:1.2em;font-weight:700;margin-bottom:10px}.bot-unshown,.bot-window.off{display:none;pointer-events:none}.bot-window .close{margin-left:10px;color:#fff;background:#da1a1a}.search-window{display:flex;flex-flow:column}.templates-result{overflow:auto}.template{background:#222;padding:5px;position:relative;margin-top:8px}.template-name{font-weight:700}.template-author{color:#888}.template-peek{color:#bbb;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;margin:5px 0}.template .result-msg{margin-top:0}.template.private .template-name svg{width:12px;margin-left:6px;fill:#fff}.template.private{background:#121212}.bot-temp-apply,.bot-temp-menu{fill:#aaa;position:absolute;cursor:pointer}.bot-temp-apply{margin:0 5px;right:0;top:5px}.bot-temp-menu{left:0}.template-menu{width:100px;left:0;top:10px;position:absolute;background:#000a;z-index:1}.template-option{margin:0!important;padding:5px 0;border-bottom:1px solid #555}textarea{width:100%;resize:none}select{cursor:pointer}.bot--box-l2{margin-left:20px}.bot--box-l3{margin-left:30px}#botPanel label.unactive{color:#aaa}.bot-condits-switch{position:absolute;right:0}#botPanel .btn-on{background:green}.unactive-form{display:none}.cond-form{margin-top:30px}.cond-form .input-container{display:flex;flex-flow:column;align-items:flex-start;width:45%}.cond-control{font-weight:700}.cond-form input{width:100%;margin-left:0!important}.bot--cond-item{display:flex}.bot--cond-item>*{width:50%;height:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:2px}.then-part{background:#f779}.necessary_submit{display:none}.templates-modes-div{margin-top:10px;display:flex;justify-content:space-between}.queue-icon{margin-right:6px;cursor:pointer}.editInput{width:100%;box-sizing:border-box}.invalid-item{color:#fff;background:#f22}.begin-div{margin-top:10px}.bot-warning{background:rgba(236,178,18,.356);padding:8px;font-size:.8rem;margin-bottom:8px;display:flex;justify-content:space-between}.bot-warning.closed{display:none}.bot-close-warning{font-weight:700;cursor:pointer}.warning-screen{position:absolute;z-index:10;background:rgba(0,0,0,.842);display:flex;flex-flow:column;width:100%;height:100%;justify-content:center;align-items:center;top:0;left:0}.warning-btns{display:flex;flex-flow:row;margin-top:20px}.warning-btns .bot--btn{flex:1;text-align:center;width:120px}.warning-ok{margin:0 10px}.warning-cancel{background:0 0;margin:0 10px}.warning-info{text-align:center;padding:0 30px}`
                 // active el - border: 1px solid #f55;
 
                 const style = document.createElement('style');
@@ -1600,15 +1598,14 @@ if(bot) bot.stop()
             alreadyUsed: [],
             timesTrying: 0,
             onlyFirstMatchingCond: true,
+            isStarting: true,
 
             startChat(){
                 const msg = bot.cp.beginInput.value;
-                
-                if(msg){
-                    setTimeout(() => {
-                        this.insertMsg(msg);
-                        bot.sendMsg();
-                    }, 1000);
+                if(!this.log.firstChild && msg){
+                    this.isStarting = false;
+                    this.insertToInput(msg);
+                    return true
                 }
             },
 
@@ -1624,7 +1621,7 @@ if(bot) bot.stop()
                 const strangerMsg = this.getStrangerMsg();
                 if(strangerMsg){
                     const strMsg = strangerMsg.trim().toLowerCase();
-
+                    
                     for(let i=0; i<this.condListLength; i++){
                         const conds = this.condArr[i];
                         let ifCond = conds.ifs[0];
@@ -1633,29 +1630,26 @@ if(bot) bot.stop()
                         if(/^\/[\s\S]*\//.test(ifCond)){ // check if ifconditional is a regex
                             try {
                                 const userReg = ifCond.replace(/^\/|\/$/g, '');
-                                const reg = new RegExp(userReg); // can cause nothing to repeat error
-                                const m = strMsg.match(reg);
+                                const reg = new RegExp(userReg);
+                                const match = strMsg.match(reg);
                                 
-                                if(m ? m.length : 0){
-                                    this.insertMsg(thenCond);
-                                    bot.sendMsg();
+                                if(match ? match.length : 0){
+                                    this.insertToInput(thenCond);
+                                    // bot.sendMsg();
+                                    if(this.onlyFirstMatchingCond) break
                                 }
                             } catch(err) {
                                 console.log('Invalid RegEx: ', ifCond, err);
                                 this.markInvalid(this.condList.children[i].children[0]);
-                            } finally {
-                                if(this.onlyFirstMatchingCond)
-                                    break
                             }
                         } else {
-                            ifCond = ifCond.trim().toLowerCase()
+                            ifCond = ifCond.trim().toLowerCase();
                             if(strMsg === ifCond){
-                                this.insertMsg(thenCond);
+                                this.insertToInput(thenCond);
                                 break;
                             }
                         }
                     }
-                    // bot.sendMsg();
                 }
             },
             
@@ -1669,7 +1663,7 @@ if(bot) bot.stop()
                 }
             },
 
-            insert(forceFreshMsg = false) {
+            defineMsgToSend(forceFreshMsg = false) {
                 if (this.listLength !== 0) {
                     this.checkCounters()
 
@@ -1700,14 +1694,14 @@ if(bot) bot.stop()
 
                     switch (this.mode) {
                         case 'parrot': {
-                            this.insertMsg(this.getStrangerMsg());
+                            this.insertToInput(this.getStrangerMsg());
                         }
                         break;
 
                         case 'increment': {
                             this.initialMsg = this.textArr[0];
                             this.msg += this.initialMsg;
-                            this.insertMsg(this.msg);
+                            this.insertToInput(this.msg);
                             this.msgCounter++;
                         }
                         break;
@@ -1746,18 +1740,18 @@ if(bot) bot.stop()
                     if(this.timesTrying >= 4){ 
                         this.timesTrying = 0;
                         this.alreadyUsed = [];
-                        this.insert();
+                        this.defineMsgToSend();
                     } else { // try to use random message that hasn't been used 3 times, else select fresh msg
                         isAlreadyUsed = this.alreadyUsed.find(item => msg === item) ? true : false;
                         
                         if(isAlreadyUsed){
-                            this.insert()
+                            this.defineMsgToSend()
                         } else {
-                            this.insertMsg(msg);
+                            this.insertToInput(msg);
                         }
                     }
                 } else {
-                    this.insertMsg(msg);
+                    this.insertToInput(msg);
                 }
 
                 if(!isAlreadyUsed){
@@ -1776,7 +1770,7 @@ if(bot) bot.stop()
                 }
             },
 
-            insertMsg(msg) {
+            insertToInput(msg, send = true) {
                 const msgSplted = msg.split('$msg', 2);
 
                 let msgFinal = '';
@@ -1786,16 +1780,30 @@ if(bot) bot.stop()
                     msgFinal = msgSplted[0];
                 }
 
-                this.input.value = msgFinal;
+                const input = this.input;
+                if(!bot.isReact){
+                    input.value = msgFinal;
+                } else {
+                    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, "value").set;
+                    nativeInputValueSetter.call(input, msgFinal);
+                    
+                    const ev = new Event('input', { bubbles: true }); 
+                    // const ev = new Event('keydown', { bubbles: true });
+                    input.dispatchEvent(ev);
+                }
+                
+                if(send) bot.sendMsg()
             },
 
             getStrangerMsg() {
-                // if(bot.isLastMsgStrangers()){
-                const strMsgEls = bot.log.querySelectorAll('.log-stranger');
-                if(strMsgEls.length){
-                    const strangerMsg = strMsgEls[strMsgEls.length-1].textContent;
-                    return strangerMsg.replace(/Obcy:\s/, '');
-                    // const strangerMsg = bot.log.lastChild.textContent;
+                // const strMsgEls = bot.log.querySelectorAll('.log-stranger');
+                // if(strMsgEls.length){
+                //     const strangerMsg = strMsgEls[strMsgEls.length-1].textContent;
+                //     return strangerMsg.replace(/Obcy:\s/, '');
+                const strMsgEl = this.log.querySelector(bot.lastStrangerMsgQuery);
+                if(strMsgEl){
+                    const strMsg = strMsgEl.textContent;
+                    return strMsg
                 } else
                     return ''
             },
@@ -2172,6 +2180,7 @@ if(bot) bot.stop()
 
             init() {
                 this.input = bot.inp;
+                this.log = bot.log;
                 this.list = bot.cp.list;
                 this.listLength = this.list.length;
                 this.condList = bot.cp.condList;
@@ -2184,6 +2193,7 @@ if(bot) bot.stop()
 
                 setTimeout(() => {
                     this.updateList();
+                    this.updateList('conds');
                 }, 0);
             }
         },
@@ -2216,7 +2226,7 @@ if(bot) bot.stop()
                                 ftmsg += '..';
                                 break;
                         }
-                        this.text.insertMsg(ftmsg);
+                        this.text.insertToInput(ftmsg, false);
 
                     }, this.text.fakeTypeRate);
                 }
@@ -2250,6 +2260,9 @@ if(bot) bot.stop()
         },
 
         runSetup() {
+            if(this.text.startChat())
+                return
+
             if(this.isCondsRunning){
                 if(!this.text.isReply)
                     this.text.checkCond();
@@ -2261,13 +2274,13 @@ if(bot) bot.stop()
                 if (this.text.isReply) {
                     try {
                         if (this.isLastMsgStrangers() || (this.text.isReplyAll && this.text.counter > 0)) {
-                            this.text.insert();
-                            this.sendMsg();
+                            this.text.defineMsgToSend();
+                            // this.sendMsg();
                         }
                     } catch (err) {}
                 } else {
-                    this.text.insert();
-                    this.sendMsg();
+                    this.text.defineMsgToSend();
+                    // this.sendMsg();
                 }
 
                 this.isFirstRun = false;
@@ -2279,8 +2292,11 @@ if(bot) bot.stop()
         sendMsg() {
             // if(this.btn){
             this.btn.click();
-            const confirmBtn = document.querySelector('.sd-interface button');
-            if(confirmBtn) confirmBtn.click()
+            // const confirmBtn = document.querySelector('.sd-interface button');
+            if(this.alertBoxConfirmBtn){
+                const confirmBtn = document.querySelector(this.alertBoxConfirmBtn);
+                if(confirmBtn) confirmBtn.click()
+            }
             // } else {
             //     this.inp.dispatchEvent(new Event('focus'));
             //     this.inp.dispatchEvent(new KeyboardEvent('keypress',{keyCode:13}));
@@ -2290,10 +2306,11 @@ if(bot) bot.stop()
         leaveIfDisconnected() {
             if (this.btn.classList.contains('disabled') && this.isAutoNext) {
                 this.btnEsc.click();
-                if(!this.text.isRandom)
+                if(!this.text.isRandom){
+                    this.text.isStarting = true
                     this.text.reset();
-
-                this.text.startChat();
+                }
+                // this.text.startChat();
             }
         },
 
@@ -2340,26 +2357,18 @@ if(bot) bot.stop()
                 this[running] = !this[running];
                 if(this.isRunning) this.start();
             }
-
-            // if(this[otherRunning] !== this[running]){ // if one of switches is ON and if list shown is in state diffrent than this one running then switch them
-            //     if(mode === 'queue'){
-            //         if(this[running] === this.text.isConditsShown){
-            //             this.cp.handleConditsSwitch();
-            //         }
-            //     } else {
-            //         if(this[running] === !this.text.isConditsShown){
-            //             this.cp.handleConditsSwitch();
-            //         }
-            //     }
-            // }
         },
 
-        init(inputQuery, btnQuery = null, btnEscQuery = null, messageAreaQuery = null, strangerMsgClass = null) {
-            this.btn = btnQuery ? document.querySelector(btnQuery) : null;
-            this.btnEsc = btnEscQuery ? document.querySelector(btnEscQuery) : null;
+        // init(inputQuery, sendBtnQuery = null, disconnectBtnQuery = null, msgLogQuery = null, strangerMsgClass = null) {
+
+        init({inputQuery, sendBtnQuery = null, disconnectBtnQuery = null, msgLogQuery = null, strangerMsgClass = null, lastStrangerMsgQuery = null, isReact = false}) {
+            this.btn = sendBtnQuery ? document.querySelector(sendBtnQuery) : null;
+            this.btnEsc = disconnectBtnQuery ? document.querySelector(disconnectBtnQuery) : null;
             this.inp = inputQuery ? document.querySelector(inputQuery) : null;
-            this.log = messageAreaQuery ? document.querySelector(messageAreaQuery) : null;
+            this.log = msgLogQuery ? document.querySelector(msgLogQuery) : null;
             this.strangerMsgClass = strangerMsgClass;
+            this.lastStrangerMsgQuery = lastStrangerMsgQuery;
+            this.isReact = isReact;
 
             setInterval(() => {
                 if(this.isRunning) this.leaveIfDisconnected();
@@ -2389,7 +2398,12 @@ if(bot) bot.stop()
     window.bot = bot;
 }
 //6obcy
-bot.init('#box-interface-input', 'button.o-any.o-send', 'button.o-any.o-esc', '#log-dynamic', 'log-stranger');
-
-//e-chat.co
-// bot.init('#InputTextArea', '#SendButton', 'null');
+bot.init({
+    inputQuery: '#box-interface-input',
+    sendBtnQuery: 'button.o-any.o-send',
+    disconnectBtnQuery: 'button.o-any.o-esc',
+    msgLogQuery: '#log-dynamic',
+    strangerMsgClass: 'log-stranger',
+    lastStrangerMsgQuery: '.log-stranger:last-of-type .log-msg-text',
+    alertBoxConfirmBtn: '.sd-interface button'
+})
