@@ -1,4 +1,5 @@
 #botPanel {
+    margin: unset;
     color: white;
     padding: 10px;
     z-index: 1000;
@@ -6,6 +7,8 @@
     width: 450px;
     box-sizing: border-box;
     font-family: roboto, arial;
+    top: 0;
+    line-height: initial;
 }
 
 #botPanel, .bot-window {
@@ -446,7 +449,7 @@
 }
 
 #bot--impSep {
-    width: 30px;
+    width: 50px;
 }
 
 #bot--expName {
@@ -540,7 +543,7 @@
 .bot-window .close {
     margin-left: 10px;
     color: white;
-    background: red;
+    background: rgb(218, 26, 26);
 }
 
 .search-window {

@@ -1,0 +1,41 @@
+body, html {
+    background: rgb(19, 19, 19);
+    color: white;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    font-family: Roboto, 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+h2 {
+    margin-top: 0;
+}
+
+.container {
+    margin: 0 470px;
+}
+
+.me, .stranger {
+    border: 1px solid #555;
+    padding: 10px;
+}
+
+.stranger {
+    margin-top: 50px;
+}
+
+.interface {
+    display: flex;
+}
+
+.chat {
+    height: 500px;
+    border: 1px solid #555;
+    padding: 10px;
+}

@@ -1,4 +1,4 @@
-bot ? bot.stop() : 0;
+if(bot) bot.stop()
 {
     const handleBtnClick = (btn, fn) => {
         const state = btn.classList.contains('btn-on');
@@ -68,7 +68,7 @@ bot ? bot.stop() : 0;
 
     var bot = {
 
-        version: '0.3',
+        version: '0.3.4',
         devMode: true,
         botInterval: null,
         fakeTypeInterval: null,
@@ -96,10 +96,10 @@ bot ? bot.stop() : 0;
                 const body = document.querySelector('body');
 
                 const oldBotPanel = document.querySelector('#botPanel');
-                oldBotPanel ? (oldBotPanel.remove()) : null;
+                if(oldBotPanel) (oldBotPanel.remove())
 
                 const oldSortablejs = document.querySelector('#sortablejs');
-                oldSortablejs ? (oldSortablejs.remove()) : null;
+                if(oldSortablejs) (oldSortablejs.remove())
 
                 const sortablejs = document.createElement('script');
                 sortablejs.id = 'sortablejs';
@@ -110,51 +110,11 @@ bot ? bot.stop() : 0;
                 // const backendUrl = 'http://localhost:3003/';
 
                 const constructCond = (ifval, thenval) => {
-                    return msg = {
+                    return {
                         ifs: [ifval],
                         thens: [thenval]
                     }
                 }
-
-                sortablejs.addEventListener('load', () => {
-                    Sortable.create(this.list, {
-                        group: 'botQueue',
-                        animation: 100,
-                        handle: '.bot-handle',
-                        onEnd: e => {
-                            const kids = this.list.children;
-                            const newTextArr = [];
-        
-                            for (let i = 0; i < kids.length; i++) {
-                                kid = kids[i];
-                                // if(!kid.classList.contains('bot-handle') && !kid.classList.contains('editBtn'))
-                                newTextArr.push(kid.textContent);
-                            }
-        
-                            bot.text.mutateTextArr(newTextArr);
-                        }
-                    });
-
-                    Sortable.create(this.condList, {
-                        group: 'botConds',
-                        animation: 100,
-                        handle: '.bot-handle',
-                        onEnd: e => {
-                            const kids = this.condList.children;
-                            const newTextArr = [];
-        
-                            for (let i = 0; i < kids.length; i++) {
-                                const ifContent = kids[i].children[0].textContent;
-                                const thenContent = kids[i].children[1].textContent;
-                                
-                                const cond = constructCond(ifContent, thenContent);
-                                newTextArr.push(cond);
-                            }
-        
-                            bot.text.mutateTextArr(newTextArr);
-                        }
-                    })
-                })
 
                 this.all = document.createElement('div');
                 this.all.id = 'bot--all-without-hide-btn'
@@ -195,7 +155,7 @@ bot ? bot.stop() : 0;
                 }
 
                 const makeEl = (classes = [], childElsOrText = '', elType = 'div') => {
-                    el = document.createElement(elType)
+                    const el = document.createElement(elType)
                     
                     if(childElsOrText){
                         if(typeof childElsOrText === 'string'){
@@ -232,6 +192,7 @@ bot ? bot.stop() : 0;
                     if(typeof el === 'string') return this[el]
                     return el
                 }
+
                 const appendEl = (el, parentEl) => { // tests both el and parentEl for being string
                     elThis(parentEl).appendChild(elThis(el))
                 }
@@ -853,7 +814,7 @@ bot ? bot.stop() : 0;
                                     const noData = makeEl('bot-no-data', 'Nothing in here, but You can change it!')
                                     frag.appendChild(noData)
                                 } else {
-                                    for(item of data){
+                                    for(let item of data){
                                         createTemplate(item, frag)
                                     }
                                 }
@@ -1002,7 +963,7 @@ bot ? bot.stop() : 0;
                                 applyPromise = applyTemplate(tempId, true);
                             }
                             else if (mode === 'save'){
-                                tempData = bot.text.packData();
+                                const tempData = bot.text.packData();
                                 
                                 body = {
                                     ...body,
@@ -1528,6 +1489,46 @@ bot ? bot.stop() : 0;
                 body.insertBefore(this.panel, body.firstChild);
 
                 this.stylize();
+
+                sortablejs.addEventListener('load', () => { //! react-friendly remove
+                    Sortable.create(this.list, {
+                        group: 'botQueue',
+                        animation: 100,
+                        handle: '.bot-handle',
+                        onEnd: e => {
+                            const kids = this.list.children;
+                            const newTextArr = [];
+        
+                            for (let i = 0; i < kids.length; i++) {
+                                const kid = kids[i];
+                                // if(!kid.classList.contains('bot-handle') && !kid.classList.contains('editBtn'))
+                                newTextArr.push(kid.textContent);
+                            }
+        
+                            bot.text.mutateTextArr(newTextArr);
+                        }
+                    });
+
+                    Sortable.create(this.condList, {
+                        group: 'botConds',
+                        animation: 100,
+                        handle: '.bot-handle',
+                        onEnd: e => {
+                            const kids = this.condList.children;
+                            const newTextArr = [];
+        
+                            for (let i = 0; i < kids.length; i++) {
+                                const ifContent = kids[i].children[0].textContent;
+                                const thenContent = kids[i].children[1].textContent;
+                                
+                                const cond = constructCond(ifContent, thenContent);
+                                newTextArr.push(cond);
+                            }
+        
+                            bot.text.mutateTextArr(newTextArr);
+                        }
+                    })
+                }) //!
             },
 
             handleConditsSwitch(e){
@@ -1540,7 +1541,7 @@ bot ? bot.stop() : 0;
 
             toggleHide(){
                 if (this.isHidden) {
-                    this.hideBtn.style.setProperty('background', 'red');
+                    this.hideBtn.style.setProperty('background', 'rgb(218, 26, 26)');
                     this.all.style.setProperty('display', 'flex');
                 } else {
                     this.hideBtn.style.setProperty('background', 'green')
@@ -1566,7 +1567,7 @@ bot ? bot.stop() : 0;
 
                 const oldBotStyle = document.querySelector('#botStyle');
 
-                oldBotStyle ? oldBotStyle.remove() : null;
+                if(oldBotStyle) oldBotStyle.remove()
 
                 document.getElementsByTagName('head')[0].appendChild(style);
             }
@@ -2076,7 +2077,7 @@ bot ? bot.stop() : 0;
                         mode: this.mode,
                         begin: bot.cp.beginInput.value
                     },
-                      
+                    
                     textArr: this.textArr,
                     condArr: this.condArr
                 }
@@ -2230,7 +2231,7 @@ bot ? bot.stop() : 0;
 
         stop() {
             if (this.isRunning) {
-                this.cp.btn.style.setProperty('background', 'red')
+                this.cp.btn.style.setProperty('background', 'rgb(218, 26, 26)')
                 clearInterval(this.botInterval);
                 clearInterval(this.fakeTypeInterval);
                 // clearInterval(this.condInterval);
@@ -2279,7 +2280,7 @@ bot ? bot.stop() : 0;
             // if(this.btn){
             this.btn.click();
             const confirmBtn = document.querySelector('.sd-interface button');
-            confirmBtn ? confirmBtn.click() : null;
+            if(confirmBtn) confirmBtn.click()
             // } else {
             //     this.inp.dispatchEvent(new Event('focus'));
             //     this.inp.dispatchEvent(new KeyboardEvent('keypress',{keyCode:13}));
@@ -2321,7 +2322,7 @@ bot ? bot.stop() : 0;
 
         toggleAutoNext() {
             if (this.isAutoNext) {
-                this.cp.btnAutoNext.style.setProperty('background', 'red')
+                this.cp.btnAutoNext.style.setProperty('background', 'rgb(218, 26, 26)')
             } else {
                 this.cp.btnAutoNext.style.setProperty('background', 'green')
             }
