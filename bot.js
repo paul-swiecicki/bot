@@ -2293,8 +2293,8 @@ if(bot) bot.stop()
             // if(this.btn){
             this.btn.click();
             // const confirmBtn = document.querySelector('.sd-interface button');
-            if(this.alertBoxConfirmBtn){
-                const confirmBtn = document.querySelector(this.alertBoxConfirmBtn);
+            if(this.alertBoxConfirmBtnQuery){
+                const confirmBtn = document.querySelector(this.alertBoxConfirmBtnQuery);
                 if(confirmBtn) confirmBtn.click()
             }
             // } else {
@@ -2310,7 +2310,6 @@ if(bot) bot.stop()
                     this.text.isStarting = true
                     this.text.reset();
                 }
-                // this.text.startChat();
             }
         },
 
@@ -2359,15 +2358,15 @@ if(bot) bot.stop()
             }
         },
 
-        // init(inputQuery, sendBtnQuery = null, disconnectBtnQuery = null, msgLogQuery = null, strangerMsgClass = null) {
-
-        init({inputQuery, sendBtnQuery = null, disconnectBtnQuery = null, msgLogQuery = null, strangerMsgClass = null, lastStrangerMsgQuery = null, isReact = false}) {
+        init({inputQuery, sendBtnQuery = null, disconnectBtnQuery = null, msgLogQuery = null, strangerMsgClass = null, lastStrangerMsgQuery = null, alertBoxConfirmBtnQuery = null, isReact = false, inactiveSendBtnClass = null}) {
             this.btn = sendBtnQuery ? document.querySelector(sendBtnQuery) : null;
             this.btnEsc = disconnectBtnQuery ? document.querySelector(disconnectBtnQuery) : null;
             this.inp = inputQuery ? document.querySelector(inputQuery) : null;
             this.log = msgLogQuery ? document.querySelector(msgLogQuery) : null;
             this.strangerMsgClass = strangerMsgClass;
             this.lastStrangerMsgQuery = lastStrangerMsgQuery;
+            this.inactiveSendBtnClass = inactiveSendBtnClass;
+            this.alertBoxConfirmBtnQuery = alertBoxConfirmBtnQuery;
             this.isReact = isReact;
 
             setInterval(() => {
@@ -2392,7 +2391,7 @@ if(bot) bot.stop()
                     }
                 }
             }
-        },
+        }
     }
 
     window.bot = bot;
@@ -2405,5 +2404,6 @@ bot.init({
     msgLogQuery: '#log-dynamic',
     strangerMsgClass: 'log-stranger',
     lastStrangerMsgQuery: '.log-stranger:last-of-type .log-msg-text',
-    alertBoxConfirmBtn: '.sd-interface button'
+    alertBoxConfirmBtnQuery: '.sd-interface button',
+    inactiveSendBtnClass: 'disabled'
 })
