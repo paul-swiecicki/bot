@@ -1,6 +1,2 @@
 <h1>BloonBot</h1>
-
-Aby użyć naciśnij <b>F12</b> na stronie obcego i wklej do konsoli kod
-- <s>z https://dallowwishstudios.github.io/bot/</s> (wkrótce)
-- lub z pliku bot.js
-i potwierdź enterem.
+Download launcher here <s>bit.ly/bloonbot<s>
