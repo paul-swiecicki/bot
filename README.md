@@ -9,7 +9,7 @@
 
 ## General info
 
-BloonBot is an injectable chat bot that is highly customizable. Features templates that modify how BloonBot behaves and what it sends, creating and saving templates,  authentication system, database, conditional replying and many different modifiers and modes.
+BloonBot is an injectable chat bot that is highly customizable. Features templates that modify how BloonBot behaves and what it sends, creating and saving templates to files or to the server, authentication system, database, conditional replying and many different modifiers and modes.
 
 On the BloonBot website you can download installer for windows that will automatically inject the bot in just a few clicks.
 
